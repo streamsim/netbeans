@@ -1740,7 +1740,7 @@ public final class FileUtil extends Object {
 
         long now = System.currentTimeMillis();
         if ((BaseUtilities.isWindows() || (BaseUtilities.getOperatingSystem() == BaseUtilities.OS_OS2))) {
-            retFile = normalizeFileOnWindows(file);
+            retFile = normalizeFileOnWindowsNew(file);
         } else if (BaseUtilities.isMac()) {
             retFile = normalizeFileOnMac(file);
         } else {
@@ -1839,6 +1839,26 @@ public final class FileUtil extends Object {
         }
 
         return retVal;
+    }
+
+    private static File normalizeFileOnWindowsNew(File file) {
+        if (file.getClass().getName().startsWith("sun.awt.shell")) { // NOI18N
+            return file;
+        }
+
+        try {
+            String path = file.toPath().toAbsolutePath().normalize().toString();
+            if (path.length() >= 3) {
+                char letter = path.charAt(0);
+                if (Character.isAlphabetic(letter) && path.charAt(1) == ':' && path.charAt(2) == '\\') {
+                    path = Character.toUpperCase(letter) + path.substring(1);
+                }
+            }
+            return new File(path);
+
+        } catch (IllegalArgumentException iae) {
+            return file.getAbsoluteFile();
+        }
     }
 
     private static File normalizeFileOnWindows(final File file) {
