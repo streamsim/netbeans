@@ -33,6 +33,8 @@ import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -179,6 +181,8 @@ class FlashingIcon extends JLabel implements MouseListener, PropertyChangeListen
         if (null != currentNotification) {
             if (showBalloon) {
                 if (canShowBalloon()) {
+                    final int timeoutMillis = Integer.getInteger("nb.notification.balloon.timeout", 3 * 1000);
+                    Logger.getLogger(FlashingIcon.class.getName()).log(Level.INFO, "Balloon timeoutMillis = " + timeoutMillis);
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
@@ -193,7 +197,7 @@ class FlashingIcon extends JLabel implements MouseListener, PropertyChangeListen
                                 public void actionPerformed(ActionEvent e) {
                                     n.markAsRead(true);
                                 }
-                            }, 3 * 1000);
+                            }, timeoutMillis);
                         }
                     });
                 }
