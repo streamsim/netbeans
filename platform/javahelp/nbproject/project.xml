@@ -177,10 +177,18 @@
                 </test-type>
             </test-dependencies>
             <public-packages>
+                <package>javax.help</package>
+                <package>javax.help.event</package>
+                <package>javax.help.plaf</package>
+                <package>javax.help.plaf.basic</package>
+                <package>javax.help.plaf.gtk</package>
+                <package>javax.help.resources</package>
+                <package>javax.help.search</package>
+                <package>javax.help.tagext</package>
                 <package>org.netbeans.api.javahelp</package>
             </public-packages>
             <class-path-extension>
-                <runtime-relative-path/>
+                <runtime-relative-path>ext/jhall-2.0_05.jar</runtime-relative-path>
                 <binary-origin>external/jhall-2.0_05.jar</binary-origin>
             </class-path-extension>
         </data>
