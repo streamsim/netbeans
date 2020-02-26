@@ -240,12 +240,12 @@ public final class Splash implements Stamps.Updater {
     }
 
     private static Icon loadContentIcon(boolean about) {
-        Image ret = null;
+        ImageIcon ret = null;
         if (about) {
-            ret = ImageUtilities.loadImage("org/netbeans/core/startup/about.png", true);
+            ret = ImageUtilities.loadImageIcon("org/netbeans/core/startup/about.png", true);
         }
         if (ret == null) {
-            ret = ImageUtilities.loadImage("org/netbeans/core/startup/splash.gif", true);
+            ret = ImageUtilities.loadImageIcon("org/netbeans/core/startup/splash.gif", true);
         }
         if (ret == null) {
             return null;
