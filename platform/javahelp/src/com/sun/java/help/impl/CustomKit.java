@@ -186,7 +186,9 @@ public class CustomKit extends HTMLEditorKit {
 		if (kind == HTML.Tag.OBJECT) {
 		    debug("creating ObjectView1 for: " + elem);
 		    return new ObjectView1(elem);
-		}
+		} else if (kind == HTML.Tag.IMG) {
+                    return new NbImageView(elem);
+                }
 	    }
 	    return super.create(elem);
 	}
