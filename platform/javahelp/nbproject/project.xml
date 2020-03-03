@@ -188,8 +188,16 @@
                 <package>org.netbeans.api.javahelp</package>
             </public-packages>
             <class-path-extension>
-                <runtime-relative-path>ext/jhall-2.0_05.jar</runtime-relative-path>
-                <binary-origin>external/jhall-2.0_05.jar</binary-origin>
+                <runtime-relative-path>ext/jdic-stub.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jdic-stub.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jsp-api.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jsp-api.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/servlet-api.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/servlet-api.jar</binary-origin>
             </class-path-extension>
         </data>
     </configuration>
