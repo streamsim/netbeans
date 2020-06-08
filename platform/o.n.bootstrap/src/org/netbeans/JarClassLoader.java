@@ -54,6 +54,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Collection;
 import java.util.TreeSet;
 import java.util.Vector;
 import java.util.concurrent.Callable;
@@ -145,6 +146,7 @@ public class JarClassLoader extends ProxyClassLoader {
     private static final Logger LOGGER = Logger.getLogger(JarClassLoader.class.getName());
 
     private Source[] sources;
+    private final Map<String, Collection<Source>> resourcesMap = new HashMap<>();
     private Module module;
     
     /** Creates new JarClassLoader.
@@ -175,6 +177,38 @@ public class JarClassLoader extends ProxyClassLoader {
         sources = l.toArray(new Source[l.size()]);
         // overlaps with old packages doesn't matter,PCL uses sets.
         addCoveredPackages(getCoveredPackages(module, sources));
+        addSourcesToResourceMap(sources);
+    }
+
+    private void addSourcesToResourceMap(Source... sources) {
+        synchronized (resourcesMap) {
+            for (Source source : sources) {
+                for (String resource : source.getContainingResources()) {
+                    resourcesMap.compute(resource, (k, v) -> {
+                        if (v == null) {
+                            return Collections.singleton(source);
+                        }
+                        // If it is a singleton, create a growing copy
+                        if (v.size() == 1) {
+                            v = new ArrayList<>(v);
+                        }
+                        v.add(source);
+                        return v;
+                    });
+                }
+            }
+        }
+    }
+
+    private Collection<Source> getSourcesForResource(String resourceName) {
+        synchronized (resourcesMap) {
+            Collection<Source> src = resourcesMap.get(resourceName);
+            if (src == null) {
+                return null;
+            }
+            // If it is a singleton, return it, otherwise create a copy
+            return src.size() == 1 ? src : new ArrayList<>(src);
+        }
     }
 
     final void addURL(URL location) throws IOException, URISyntaxException {
@@ -182,7 +216,8 @@ public class JarClassLoader extends ProxyClassLoader {
         assert f.exists() : "URL must be existing local file: " + location;
 
         List<Source> arr = new ArrayList<Source>(Arrays.asList(sources));
-        arr.add(new JarSource(f));
+        JarSource src = new JarSource(f);
+        arr.add(src);
 
         synchronized (sources) {
             sources = arr.toArray(new Source[arr.size()]);
@@ -190,6 +225,7 @@ public class JarClassLoader extends ProxyClassLoader {
 
         // overlaps with old packages doesn't matter,PCL uses sets.
         addCoveredPackages(getCoveredPackages(module, sources));
+        addSourcesToResourceMap(src);
     }
 
     /** Allows to specify the right permissions, OneModuleClassLoader does it differently.
@@ -219,8 +255,12 @@ public class JarClassLoader extends ProxyClassLoader {
     
     byte[] getClassData(String name) {
         String path = name.replace('.', '/').concat(".class"); // NOI18N
-        for( int i=0; i<sources.length; i++ ) {
-            final Source src = sources[i];
+
+        Collection<Source> srcs = getSourcesForResource(name);
+        if (srcs == null) {
+            return null;
+        }
+        for( Source src : srcs) {
             byte[] data = src.getClassData(path);
             if (data != null) {
                 return data;
@@ -234,8 +274,12 @@ public class JarClassLoader extends ProxyClassLoader {
         String path = name.replace('.', '/').concat(".class"); // NOI18N
         
         // look up the Sources and return a class based on their content
-        for( int i=0; i<sources.length; i++ ) {
-            final Source src = sources[i];
+        Collection<Source> srcs = getSourcesForResource(path);
+        if (srcs == null) {
+            return null;
+        }
+
+        for( Source src: srcs) {
             byte[] data = src.getClassData(path);
             if (data == null) continue;
 
@@ -317,8 +361,12 @@ public class JarClassLoader extends ProxyClassLoader {
     // look up the jars and return a resource based on a content of jars
     @Override
     public URL findResource(String name) {
-        for( int i=0; i<sources.length; i++ ) {
-            URL item = sources[i].getResource(name);
+        Collection<Source> srcs = getSourcesForResource(name);
+        if (srcs == null) {
+            return null;
+        }
+        for( Source source: srcs) {
+            URL item = source.getResource(name);
             if (item != null) return item;
         }
 	return null;
@@ -326,14 +374,18 @@ public class JarClassLoader extends ProxyClassLoader {
 
     @Override
     public Enumeration<URL> findResources(String name) {
-        Vector<URL> v = new Vector<URL>(3);
+        Collection<Source> srcs = getSourcesForResource(name);
+        if (srcs == null) {
+            return Collections.enumeration(Collections.emptyList());
+        }
+        List<URL> v = new ArrayList<>(srcs.size());
         // look up the jars and return a resource based on a content of jars
 
-        for( int i=0; i<sources.length; i++ ) {
-            URL item = sources[i].getResource(name);
+        for( Source src: srcs ) {
+            URL item = src.getResource(name);
             if (item != null) v.add(item);
         }
-        return v.elements();
+        return Collections.enumeration(v);
     }
     
     public @Override void destroy() {
@@ -381,6 +433,8 @@ public class JarClassLoader extends ProxyClassLoader {
             }
             return pd;
         }
+
+        protected abstract Collection<String> getContainingResources();
   
         public final URL getResource(String name) {
             try {
@@ -488,8 +542,9 @@ public class JarClassLoader extends ProxyClassLoader {
         private int used;
         private volatile int[] versions;
         private volatile Reference<Manifest> manifest;
-        /** #141110: expensive to repeatedly look for them */
-        private final Set<String> nonexistentResources = Collections.synchronizedSet(new HashSet<String>());
+        // volatile is not required, only accessed from synchronized block
+        private boolean initialized = false;
+        private final Set<String> existingResources = new HashSet<>();
         private final Set<File> warnedFiles = Collections.synchronizedSet(new HashSet<File>()); // #183696
         
         JarSource(File file) throws IOException {
@@ -499,6 +554,13 @@ public class JarClassLoader extends ProxyClassLoader {
             super(new URL(resPrefix)); // NOI18N
             this.resPrefix = resPrefix; // NOI18N;
             this.file = file;
+        }
+
+        @Override
+        protected Collection<String> getContainingResources() {
+            maybeInitialize();
+            // Set has been initialized, so it can have concurrent access
+            return existingResources;
         }
 
         @Override
@@ -669,9 +731,33 @@ public class JarClassLoader extends ProxyClassLoader {
             return new int[0];
         }
 
+        private void maybeInitialize() {
+            synchronized (existingResources) {
+                if (initialized) {
+                    return;
+                }
+                try {
+                    JarFile src = getJarFile("pkg");
+                    Enumeration<JarEntry> en = src.entries();
+                    while (en.hasMoreElements()) {
+                        JarEntry je = en.nextElement();
+                        if (!je.isDirectory()) {
+                            existingResources.add(je.getName());
+                        }
+                    }
+                } catch (IOException x) {
+                    LOGGER.log(Level.INFO, "Cannot open " + file, x);
+                } finally {
+                    releaseJarFile();
+                    initialized = true;
+                }
+            }
+        }
+
         @Override
         public byte[] resource(String path) throws IOException {
-            if (nonexistentResources.contains(path)) {
+            maybeInitialize();
+            if (!existingResources.contains(path)) {
                 return null;
             }
             JarFile jf;
@@ -687,7 +773,7 @@ public class JarClassLoader extends ProxyClassLoader {
             try {
                 ZipEntry ze = jf.getEntry(path);
                 if (ze == null) {
-                    nonexistentResources.add(path);
+                    // Should never get here!
                     return null;
                 }
 
@@ -711,49 +797,53 @@ public class JarClassLoader extends ProxyClassLoader {
 
         @Override
         protected void listCoveredPackages(Set<String> known, StringBuffer save) {
-            try {
-                JarFile src = getJarFile("pkg");
+            synchronized (existingResources) {
+                try {
+                        JarFile src = getJarFile("pkg");
 
-                Enumeration<JarEntry> en = src.entries();
-                while (en.hasMoreElements()) {
-                    JarEntry je = en.nextElement();
-                    if (! je.isDirectory()) {
-                        String itm = je.getName();
-                        int slash = itm.lastIndexOf('/');
-                        if (slash == -1) {
-                            // resource in default package
-                            String res = "default/" + je.getName();
-                            if (known.add(res)) {
-                                save.append(res).append(',');
+                        Enumeration<JarEntry> en = src.entries();
+                        while (en.hasMoreElements()) {
+                            JarEntry je = en.nextElement();
+                            if (!je.isDirectory()) {
+                                existingResources.add(je.getName());
+                                String itm = je.getName();
+                                int slash = itm.lastIndexOf('/');
+                                if (slash == -1) {
+                                    // resource in default package
+                                    String res = "default/" + je.getName();
+                                    if (known.add(res)) {
+                                        save.append(res).append(',');
+                                    }
+                                    continue;
+                                }
+                                if (itm.startsWith("META-INF/")) {
+                                    String res = itm.substring(8); // "/services/pkg.Service"
+                                    if (known.add(res)) save.append(res).append(',');
+                                    continue;
+                                }
+                                String pkg = slash > 0 ? itm.substring(0, slash).replace('/', '.') : "";
+                                if (known.add(pkg)) save.append(pkg).append(',');
                             }
-                            continue;
                         }
-                        if (itm.startsWith("META-INF/")) {
-                            String res = itm.substring(8); // "/services/pkg.Service"
-                            if (known.add(res)) save.append(res).append(',');
-                            continue;
-                        }
-                        String pkg = slash > 0 ? itm.substring(0, slash).replace('/','.') : "";
-                        if (known.add(pkg)) save.append(pkg).append(',');
+                } catch (ZipException x) { // Unix
+                    if (warnedFiles.add(file)) {
+                        LOGGER.log(Level.INFO, "Cannot open " + file, x);
+                        dumpFiles(file, -1);
                     }
+                } catch (FileNotFoundException x) { // Windows
+                    if (warnedFiles.add(file)) {
+                        LOGGER.log(Level.INFO, "Cannot open " + file, x);
+                        dumpFiles(file, -1);
+                    }
+                } catch (IOException ioe) {
+                    if (warnedFiles.add(file)) {
+                        LOGGER.log(Level.WARNING, "problems with " + file, ioe);
+                        dumpFiles(file, -1);
+                    }
+                } finally {
+                    releaseJarFile();
+                    initialized = true;
                 }
-            } catch (ZipException x) { // Unix
-                if (warnedFiles.add(file)) {
-                    LOGGER.log(Level.INFO, "Cannot open " + file, x);
-                    dumpFiles(file, -1);
-                }
-            } catch (FileNotFoundException x) { // Windows
-                if (warnedFiles.add(file)) {
-                    LOGGER.log(Level.INFO, "Cannot open " + file, x);
-                    dumpFiles(file, -1);
-                }
-            } catch (IOException ioe) {
-                if (warnedFiles.add(file)) {
-                    LOGGER.log(Level.WARNING, "problems with " + file, ioe);
-                    dumpFiles(file, -1);
-                }
-            } finally {
-                releaseJarFile();
             }
         }
 
@@ -941,7 +1031,9 @@ public class JarClassLoader extends ProxyClassLoader {
     static class DirSource extends Source {
         File dir;
         Manifest manifest;
-        
+        private boolean initialized = false;
+        private final Set<String> existingResources = new HashSet<>();
+
         DirSource(File file) throws MalformedURLException {
             super(BaseUtilities.toURI(file).toURL());
             dir = file;
@@ -968,6 +1060,32 @@ public class JarClassLoader extends ProxyClassLoader {
             return dir.getPath();
         }
 
+        @Override
+        protected Collection<String> getContainingResources() {
+            maybeInitialize();
+            return Collections.unmodifiableSet(existingResources);
+        }
+
+        private void maybeInitialize() {
+            synchronized (existingResources) {
+                if (initialized) {
+                    return;
+                }
+                findExistingResources(dir, "", existingResources);
+                initialized = true;
+            }
+        }
+
+        private static void findExistingResources(File dir, String prefix, Set<String> resources) {
+            for (File f : dir.listFiles()) {
+                if (f.isDirectory()) {
+                    findExistingResources(f, prefix + f.getName() + '/', resources);
+                } else {
+                    resources.add(prefix + f.getName());
+                }
+            }
+        }
+
         protected URL doGetResource(String name) throws MalformedURLException {
             File resFile = new File(dir, name);
             return resFile.exists() ? BaseUtilities.toURI(resFile).toURL() : null;
@@ -992,15 +1110,19 @@ public class JarClassLoader extends ProxyClassLoader {
         }
         
         protected void listCoveredPackages(Set<String> known, StringBuffer save) {
-            appendAllChildren(known, save, dir, "");
+            synchronized (existingResources) {
+                appendAllChildren(known, save, dir, "", existingResources);
+                initialized = true;
+            }
         }
         
-        private static void appendAllChildren(Set<String> known, StringBuffer save, File dir, String prefix) {
+        private static void appendAllChildren(Set<String> known, StringBuffer save, File dir, String prefix, Set<String> resources) {
             boolean populated = false;
             for (File f : dir.listFiles()) {
                 if (f.isDirectory()) {
-                    appendAllChildren(known, save, f, prefix + f.getName() + '.');
+                    appendAllChildren(known, save, f, prefix + f.getName() + '.', resources);
                 } else {
+                    resources.add(prefix.replace('.', '/') + f.getName());
                     if (prefix.length() == 0) {
                         // resource in default package
                         String res = "default/" + f.getName();
