@@ -466,69 +466,91 @@ final class OutlineViewDropSupport implements DropTargetListener, Runnable {
         return true;
     }
 
+    protected static int[] calculateReorder(int nextNode, int prevNode, int[] dragNodes, int nodesCount) {
+        if (nextNode < 0 || prevNode >= nodesCount || nextNode <= prevNode) {
+            return null;
+        }
+
+        // Find valid drag nodes indices
+        int[] dragIndices = new int[dragNodes.length];
+        int indexesLength = 0;
+        for (int idx : dragNodes) {
+            if ((idx >= 0) && (idx < nodesCount)) {
+                dragIndices[indexesLength++] = idx;
+            }
+        }
+
+        // No valid indices
+        if (indexesLength == 0) {
+            return null;
+        }
+
+        // XXX: normally indexes of dragged nodes should be in ascending order, but
+        // it seems that Tree.getSelectionPaths doesn't keep this order
+        Arrays.sort(dragIndices, 0, indexesLength);
+
+        int[] perm = new int[nodesCount];
+        if (prevNode < 0) {
+            // Special case -> dragged to the top of the list (before all other nodes)
+            // Copy dragged indices first
+            System.arraycopy(dragIndices, 0, perm, 0, indexesLength);
+            // Copy not dragged indices next
+            int newIdx = indexesLength;
+            for (int curIdx = 0; curIdx < nodesCount; curIdx++) {
+                if (!containsNumber(dragIndices, indexesLength, curIdx)) {
+                    perm[newIdx++] = curIdx;
+                }
+            }
+        } else {
+            // normal case -> dragged somewhere between nodes or to the bottom of the list
+            int numBefore = 0;
+            int newIdx = 0;
+            // Go over all indices and copy the ones that are not being dragged
+            for (int curIdx = 0; curIdx < nodesCount; curIdx++) {
+                // This index is in dragged block, skip it
+                if (containsNumber(dragIndices, indexesLength, curIdx)) {
+                    continue;
+                }
+                if (curIdx <= prevNode) {
+                    // This index is before dragged block
+                    perm[newIdx] = curIdx;
+                    numBefore += 1;
+                } else {
+                    // This index is after the dragged block
+                    perm[newIdx + indexesLength] = curIdx;
+                }
+                newIdx += 1;
+            }
+            // Copy dragged indices
+            System.arraycopy(dragIndices, 0, perm, numBefore, indexesLength);
+        }
+        return perm;
+    }
+
     private void performReorder(final Node folder, Node[] dragNodes, int lNode, int uNode) {
         try {
             Index indexCookie = folder.getCookie (Index.class);
             log("performReorder indexCookie == " + indexCookie);
 
-            if (indexCookie != null) {
-                int[] perm = new int[indexCookie.getNodesCount()];
-                int[] indexes = new int[dragNodes.length];
-                int indexesLength = 0;
+            if (indexCookie == null) {
+                return;
+            }
+            int[] indexes = new int[dragNodes.length];
+            for (int i = 0; i < dragNodes.length; i++) {
+                indexes[i] = indexCookie.indexOf(dragNodes[i]);
+            }
 
-                for (int i = 0; i < dragNodes.length; i++) {
-                    int idx = indexCookie.indexOf(dragNodes[i]);
+            int[] perm = calculateReorder(lNode, uNode, indexes, indexCookie.getNodesCount());
+            if (perm == null) {
+                return;
+            }
 
-                    if ((idx >= 0) && (idx < perm.length)) {
-                        indexes[indexesLength++] = idx;
-                    }
-                }
+            // check for identity permutation
+            for (int i = 0; i < perm.length; i++) {
+                if (perm[i] != i) {
+                    indexCookie.reorder(perm);
 
-                // XXX: normally indexes of dragged nodes should be in ascending order, but
-                // it seems that Tree.getSelectionPaths doesn't keep this order
-                Arrays.sort(indexes);
-
-                if ((lNode < 0) || (uNode >= perm.length) || (indexesLength == 0)) {
-                    return;
-                }
-
-                int k = 0;
-
-                for (int i = 0; i < perm.length; i++) {
-                    if (i <= uNode) {
-                        if (!containsNumber(indexes, indexesLength, i)) {
-                            perm[i] = k++;
-                        }
-
-                        if (i == uNode) {
-                            for (int j = 0; j < indexesLength; j++) {
-                                if (indexes[j] <= uNode) {
-                                    perm[indexes[j]] = k++;
-                                }
-                            }
-                        }
-                    } else {
-                        if (i == lNode) {
-                            for (int j = 0; j < indexesLength; j++) {
-                                if (indexes[j] >= lNode) {
-                                    perm[indexes[j]] = k++;
-                                }
-                            }
-                        }
-
-                        if (!containsNumber(indexes, indexesLength, i)) {
-                            perm[i] = k++;
-                        }
-                    }
-                }
-
-                // check for identity permutation
-                for (int i = 0; i < perm.length; i++) {
-                    if (perm[i] != i) {
-                        indexCookie.reorder(perm);
-
-                        break;
-                    }
+                    break;
                 }
             }
         } catch (Exception e) {
@@ -537,7 +559,7 @@ final class OutlineViewDropSupport implements DropTargetListener, Runnable {
         }
     }
 
-    private boolean containsNumber(int[] arr, int arrLength, int n) {
+    private static boolean containsNumber(int[] arr, int arrLength, int n) {
         for (int i = 0; i < arrLength; i++) {
             if (arr[i] == n) {
                 return true;
