@@ -221,7 +221,7 @@ public class BeanProp implements BaseProperty {
     public Class	propClass;
 
     //	Array of DOMBinding, might contain only one element if TYPE_1
-    ArrayList		bindings;
+    BindingsList		bindings;
 
     ArrayList		knownValues;
     
@@ -276,7 +276,7 @@ public class BeanProp implements BaseProperty {
 	this.propClass = propClass;
 	this.bean = bean;
     if (initialCapacity >= 0) {
-        this.bindings = new ArrayList(initialCapacity);
+        this.bindings = new BindingsList(initialCapacity);
         this.attributes = new ArrayList(initialCapacity);
     }
 	this.changeListeners = null;
@@ -474,7 +474,7 @@ public class BeanProp implements BaseProperty {
     
     
     DOMBinding getBinding(int index) {
-	return (DOMBinding)this.bindings.get(index);
+	return this.bindings.get(index);
     }
 
     protected int bindingsSize() {
@@ -497,7 +497,7 @@ public class BeanProp implements BaseProperty {
             return null;
         } // end of if (this.bindingsSize() == 0)
 
-        DOMBinding b = (DOMBinding)this.bindings.get(index);
+        DOMBinding b = this.bindings.get(index);
 
         if (b != null)
             return b.getValue(this);
@@ -513,14 +513,8 @@ public class BeanProp implements BaseProperty {
      *	for example, used to build the absolute name of an elt of the graph)
      */
     public Object getValueById(int id) {
-        int size = this.bindingsSize();
-        for (int i=0; i<size; i++) {
-            DOMBinding b = (DOMBinding)this.bindings.get(i);
-	    
-            if (b.id == id)
-                return b.getValue(this);
-        }
-        return null;
+        DOMBinding b = this.bindings.getById(id);
+        return b != null ? b.getValue(this) : null;
     }
     
     /**
@@ -529,7 +523,7 @@ public class BeanProp implements BaseProperty {
      */
     public int indexToId(int index) {
         if (index>=0 && index<this.bindingsSize()) {
-            DOMBinding b = (DOMBinding)this.bindings.get(index);
+            DOMBinding b = this.bindings.get(index);
             if (b != null)
                 return b.id;
         }
@@ -541,14 +535,7 @@ public class BeanProp implements BaseProperty {
      *  This method may return -1 if we cannot figure out the index.
      */
     public int idToIndex(int id) {
-        int size = this.bindingsSize();
-        for (int i=0; i<size; i++) {
-            DOMBinding b = (DOMBinding)this.bindings.get(i);
-            
-            if ((b != null) && (b.id == id))
-                return i;
-        }
-        return -1;
+        return this.bindings.idToIndex(id);
     }
     
     //
@@ -644,7 +631,7 @@ public class BeanProp implements BaseProperty {
 	
         //  Mark the original position of the DOM nodes
         for (i=0; i<size; i++) {
-            DOMBinding d = (DOMBinding)this.bindings.get(i);
+            DOMBinding d = this.bindings.get(i);
             if (d != null)
                 d.posDOM = i;
         }
@@ -699,7 +686,7 @@ public class BeanProp implements BaseProperty {
                         changed = true;
                 }
                 skipNew[j] = true;
-                b = (DOMBinding)this.bindings.get(i);
+                b = this.bindings.get(i);
                 //  Will live at position j
                 b.pos = j;
             }
@@ -711,7 +698,7 @@ public class BeanProp implements BaseProperty {
                 if (value[i] != null) {
                     //	Add value
                     int idx = this.setElement(0, value[i], true);
-                    b = (DOMBinding)this.bindings.get(idx);
+                    b = this.bindings.get(idx);
                     //	Should live at position i
                     b.pos = i;
                     // currently located at position idx in the DOM
@@ -721,13 +708,13 @@ public class BeanProp implements BaseProperty {
             }
 	
         //  Sort the final array to match the parameter elements order
-        ArrayList newBindings = new ArrayList(newSize);
+        BindingsList newBindings = new BindingsList(newSize);
         for (i=0; i<newSize; i++)
             newBindings.add(null);
         newBindings.ensureCapacity(newSize+1);
         size = this.bindingsSize();
         for (i=0; i<size; i++) {
-            b = (DOMBinding)this.bindings.get(i);
+            b = this.bindings.get(i);
             if (b != null) {
                 newBindings.set(b.pos, b);
             }
@@ -747,7 +734,7 @@ public class BeanProp implements BaseProperty {
         //
         if (changed) {
             for (i=0; i<newSize; i++) {
-                DOMBinding d1 = (DOMBinding)this.bindings.get(i);
+                DOMBinding d1 = this.bindings.get(i);
                 if (d1 == null)
                     continue;
 		
@@ -756,7 +743,7 @@ public class BeanProp implements BaseProperty {
                 //  Do we have anyone before us (more left than us)
                 int min = d1.posDOM;
                 for (j=i+1; j<newSize; j++) {
-                    DOMBinding d2 = (DOMBinding)this.bindings.get(j);
+                    DOMBinding d2 = this.bindings.get(j);
                     if (d2.posDOM < min) {
                         min = d2.posDOM;
                         db = d2;
@@ -825,7 +812,7 @@ public class BeanProp implements BaseProperty {
 	int index = -1;
 	
 	for (int i=0; (i<size) && (index == -1); i++) {
-	    DOMBinding 	b = (DOMBinding)this.bindings.get(i);
+	    DOMBinding 	b = this.bindings.get(i);
 	    if (b != null) {
 		Object o = b.getValue(this);
 		if ((o!=null) && (o == value))
@@ -834,7 +821,7 @@ public class BeanProp implements BaseProperty {
 	}
 	
 	for (int i=0; (i<size) && (index == -1); i++) {
-	    DOMBinding 	b = (DOMBinding)this.bindings.get(i);
+	    DOMBinding 	b = this.bindings.get(i);
 	    if (b != null) {
 		Object	o = b.getValue(this);
 		if ((o!=null) && (o.equals(value)))
@@ -854,7 +841,7 @@ public class BeanProp implements BaseProperty {
 	if (index >= this.bindingsSize() && 
 	    Common.isVetoable(this.type) && useVetoEvents()) {
 
-	    DOMBinding b = (DOMBinding)this.bindings.get(index);
+	    DOMBinding b = this.bindings.get(index);
 	    if (b != null) {
 		Object value = b.getValue(this);
 
@@ -991,7 +978,7 @@ public class BeanProp implements BaseProperty {
 	    if (!add) {
             empty = (this.bindingsSize() == 0);
             if (!empty)
-                b = (DOMBinding)this.bindings.get(index);
+                b = this.bindings.get(index);
 	    }
 	    
 	    if (b == null) {
@@ -1078,7 +1065,7 @@ public class BeanProp implements BaseProperty {
 	    return;
 	}
 	
-	b = (DOMBinding)this.bindings.get(index);
+	b = this.bindings.get(index);
 	if (b != null) {
 	    Object oldValue = b.getValue(this);
 	    b.setLastKnownIndex(this, index);
@@ -1272,7 +1259,7 @@ public class BeanProp implements BaseProperty {
 	
 	//	The attribute value lives in the DOMBinding object
 	if (index != 0 || this.bindingsSize() != 0) {
-	    b = (DOMBinding)this.bindings.get(index);
+	    b = this.bindings.get(index);
     } else if (DDLogFlags.debug) {
         System.err.println("What DOMBinding should I use for BeanProp.setAttributeValue?!?");
     }
@@ -1314,7 +1301,7 @@ public class BeanProp implements BaseProperty {
 		return null;
 	}
 	
-	DOMBinding b = (DOMBinding)this.bindings.get(index);
+	DOMBinding b = this.bindings.get(index);
 	
 	if (b != null)
 	    ret = b.getAttributeValue(this, ap.getDtdName());
@@ -1359,7 +1346,7 @@ public class BeanProp implements BaseProperty {
 	int 		size = this.bindingsSize();
 	
 	for (int i=0; i<size; i++) {
-	    DOMBinding b = (DOMBinding)this.bindings.get(i);
+	    DOMBinding b = this.bindings.get(i);
 	    if (b != null)
 		b.syncNodes(this, a);
 	}
@@ -1392,7 +1379,7 @@ public class BeanProp implements BaseProperty {
 	    int index = binding.getLastKnownIndex(this);
 	    
 	    for (int i=0; i<size; i++) {
-		b = (DOMBinding)this.bindings.get(i);
+		b = this.bindings.get(i);
 		if (b == binding)
 		    break;
 		else
@@ -1755,7 +1742,7 @@ public class BeanProp implements BaseProperty {
 	
 	//	Check that we don't already know this node
 	for (int i=0; i<size; i++) {
-	    DOMBinding b = (DOMBinding)this.bindings.get(i);
+	    DOMBinding b = this.bindings.get(i);
 	    if ((b.getNode() == node) || (binding == b))
 		throw new Schema2BeansException(Common.
 		    getMessage("NodeAlreadyReferenced_msg", node));
@@ -1854,7 +1841,7 @@ public class BeanProp implements BaseProperty {
                 return null;
         }
 	
-        DOMBinding b = (DOMBinding)this.bindings.get(index);
+        DOMBinding b = this.bindings.get(index);
 	
         if (b != null) {
             if (attr != null) {
