@@ -49,7 +49,7 @@ import java.lang.reflect.*;
 public class DOMBinding {
 
     //	This integer uniquely identify this BeanProp in the graph
-    int			id;
+    final int			id;
 
     Node		node;
 
