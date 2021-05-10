@@ -64,10 +64,6 @@ public final class MetalEditorTabDisplayerUI extends BasicScrollingTabDisplayerU
         return new MetalEditorTabDisplayerUI((TabDisplayer) c);
     }
 
-    public Dimension getMinimumSize(JComponent c) {
-        return new Dimension (80, 28);
-    }
-    
     public Dimension getPreferredSize(JComponent c) {
         int prefHeight = 28;
         Graphics g = BasicScrollingTabDisplayerUI.getOffscreenGraphics(c);
