@@ -69,6 +69,7 @@
         <property name="javac.default.target" value="${javac.source}"/>
         <property name="javac.target" value="${javac.default.target}"/>
         <property name="javac.compilerargs" value=""/>
+        <property name="javac.annotations" value=""/>
         <property name="module.auto.deps.xml" location="module-auto-deps.xml"/>
         <condition property="has.module.auto.deps">
             <available file="${module.auto.deps.xml}"/>
@@ -206,7 +207,7 @@
                   fork="${javac.fork}"
         >
             <classpath refid="cp"/>
-            <compilerarg line="${javac.compilerargs}"/>
+            <compilerarg line="${javac.compilerargs} ${javac.annotations}"/>
             <processorpath refid="processor.cp"/>
         </nb-javac>
         <copy todir="${build.classes.dir}">
@@ -238,7 +239,7 @@
                   debug="${build.compiler.debug}" deprecation="${build.compiler.deprecation}" encoding="UTF-8"
                   source="${javac.source}" target="${javac.target}" includes="${javac.includes}" optimize="${build.compiler.optimize}" includeantruntime="false">
             <classpath refid="cp"/>
-            <compilerarg line="${javac.compilerargs}"/>
+            <compilerarg line="${javac.compilerargs} ${javac.annotations}"/>
             <processorpath refid="processor.cp"/>
         </nb-javac>
         <processjsannotation classes="${build.classes.dir}" asm="${asm.jar}">
@@ -637,7 +638,7 @@
                       debug="true" deprecation="${build.compiler.deprecation}" encoding="UTF-8"
                       source="${javac.source}" target="${javac.target}" optimize="${build.compiler.optimize}" includeantruntime="false">
                 <classpath refid="test.@{test.type}.cp"/>
-                <compilerarg line="${javac.compilerargs}"/>
+                <compilerarg line="${javac.compilerargs} ${javac.annotations}"/>
                 <processorpath refid="test.@{test.type}.cp"/>
             </nb-javac>
             <processjsannotation classes="${build.test.@{test.type}.classes.dir}" asm="${asm.jar}">
@@ -679,7 +680,7 @@
                           debug="true" deprecation="${build.compiler.deprecation}" encoding="UTF-8"
                           source="${javac.source}" target="${javac.target}" includeantruntime="false" optimize="${build.compiler.optimize}" includes="${javac.includes}">
                     <classpath refid="test.@{test.type}.cp"/>
-                    <compilerarg line="${javac.compilerargs}"/>
+                    <compilerarg line="${javac.compilerargs} ${javac.annotations}"/>
                     <processorpath refid="test.@{test.type}.cp"/>
                 </nb-javac>
                 <processjsannotation classes="${build.test.@{test.type}.classes.dir}" asm="${asm.jar}">
