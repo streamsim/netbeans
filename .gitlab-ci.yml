@@ -1,6 +1,11 @@
-image: openjdk:8u242-jdk
+image: maven:3.8.4-openjdk-8
+#image: openjdk:8u242-jdk
 #image: adoptopenjdk:13.0.2_8-jdk-openj9-0.18.0-bionic
 #        -Dpermit.jdk9.builds=true
+
+cache:
+  paths:
+    - .m2/repository
 
 variables:
   OPTS: >
@@ -10,19 +15,29 @@ variables:
         -Dcluster.config=streamsim
         -Dreleasejson=../netbeansrelease.json
         -Dmetabuild.branch=release113-streamsim
+  # This will suppress any download for dependencies and plugins or upload messages which would clutter the console log.
+  # `showDateTime` will show the passed time in milliseconds. You need to specify `--batch-mode` to make this work.
+  MAVEN_OPTS: "-Dhttps.protocols=TLSv1.2 -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN -Dorg.slf4j.simpleLogger.showDateTime=true -Djava.awt.headless=true"
+  # As of Maven 3.3.0 instead of this you may define these options in `.mvn/maven.config` so the same config is used
+  # when running from the command line.
+  # `installAtEnd` and `deployAtEnd` are only effective with recent version of the corresponding plugins.
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version -DinstallAtEnd=true -DdeployAtEnd=true"
 
-before_script:
-  - apt-get -qq update
-  - apt-get install ant zip -y
-  - wget -q https://s3.amazonaws.com/backup-streamsim.net/archive/netbeans-8.2-201609300101-dlight.zip
-  - wget -q https://s3.amazonaws.com/backup-streamsim.net/archive/jsearch-2.0_05.jar.zip
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
 
 stages:
-  - build
+  - build_stage
+  - deploy_stage
 
 build:
-  stage: build
+  stage: build_stage
   script:
+    - apt-get -qq update
+    - apt-get install ant zip -y
+    - wget -q https://s3.amazonaws.com/backup-streamsim.net/archive/netbeans-8.2-201609300101-dlight.zip
+    - wget -q https://s3.amazonaws.com/backup-streamsim.net/archive/jsearch-2.0_05.jar.zip
     # build
     - ant $OPTS build build-nbms
     # remove offending .xml
@@ -39,5 +54,15 @@ build:
     - cd nbbuild && zip -r netbeans-nbms-release113-streamsim.zip nbms && cd ..
   artifacts:
       paths:
+        - nbbuild/netbeans
+        - nbbuild/nbms
         - nbbuild/netbeans-release113-streamsim.zip
         - nbbuild/netbeans-nbms-release113-streamsim.zip
+
+deploy:
+  stage: deploy_stage
+  script:
+    - if [ ! -f ci_settings.xml ];
+      then echo "CI settings missing\! If deploying to GitLab Maven Repository, please see https://docs.gitlab.com/ee/user/packages/maven_repository/index.html#create-maven-packages-with-gitlab-cicd for instructions.";
+      fi
+    - 'mvn $MAVEN_CLI_OPTS nb-repository:populate -s ci_settings.xml'

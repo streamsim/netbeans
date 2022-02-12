@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.streamsim</groupId>
+    <artifactId>netbeans-platform</artifactId>
+    <version>11.3-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Streamsim NetBeans Platform</name>
+
+    <repositories>
+        <repository>
+            <id>gitlab-streamsim-maven</id>
+            <url>https://gitlab.com/api/v4/groups/4090900/-/packages/maven</url>
+        </repository>
+    </repositories>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.netbeans.utilities</groupId>
+                <artifactId>nb-repository-plugin</artifactId>
+                <version>1.6</version>
+                <configuration>
+                    <netbeansInstallDirectory>${basedir}/nbbuild/netbeans</netbeansInstallDirectory>
+                    <netbeansNbmDirectory>${basedir}/nbbuild/nbms</netbeansNbmDirectory>
+                    <netbeansSourcesDirectory>${basedir}/nbbuild/build/source-zips</netbeansSourcesDirectory>
+                    <groupIdPrefix>org.netbeans</groupIdPrefix>
+                    <forcedVersion>RELEASE113-STREAMSIM</forcedVersion>
+                    <defineCluster>true</defineCluster>
+                    <deployId>gitlab-netbeans-maven</deployId>
+                    <deployUrl>https://gitlab.com/api/v4/projects/17160550/packages/maven</deployUrl>
+                    <skipLocalInstall>true</skipLocalInstall>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
