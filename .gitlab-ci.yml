@@ -34,16 +34,16 @@ build:
   script:
     - apt-get -qq update
     - apt-get install ant zip -y
-    - wget -q https://s3.amazonaws.com/backup-streamsim.net/archive/netbeans-8.2-201609300101-dlight.zip
-    - wget -q https://s3.amazonaws.com/backup-streamsim.net/archive/jsearch-2.0_05.jar.zip
-    # build
-    - ant $OPTS build build-nbms
-    # remove offending .xml
+    # build NetBeans Platform, NBMs and source zips
+    - ant $OPTS build build-nbms build-source-zips
+    # remove offending .xml files
     - rm nbbuild/netbeans/platform/config/Modules/org-netbeans-libs-batik-read.xml
-    # add dlight cluster from NetBeans 8.2
-    - unzip -q netbeans-8.2-201609300101-dlight.zip
-    - cp -R dlight nbbuild/netbeans/
+    - rm nbbuild/netbeans/platform/config/Modules/org-openide-util-ui-svg.xml
+    # add dlight cluster, NBMs and source zips from NetBeans 8.2
+    - wget -q https://s3.amazonaws.com/backup-streamsim.net/archive/netbeans-8.2-dlight-cluster-nbms-sourcezips.zip
+    - unzip -q netbeans-8.2-dlight-cluster-nbms-sourcezips.zip
     # add JavaHelp
+    - wget -q https://s3.amazonaws.com/backup-streamsim.net/archive/jsearch-2.0_05.jar.zip
     - unzip -q jsearch-2.0_05.jar.zip
     - cp jsearch-2.0_05.jar nbbuild/netbeans/harness/antlib/
     # build zip

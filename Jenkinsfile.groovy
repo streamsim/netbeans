@@ -27,17 +27,13 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                sh 'wget -q https://s3.amazonaws.com/backup-streamsim.net/archive/netbeans-8.2-201609300101-dlight.zip'
-                sh 'wget -q https://s3.amazonaws.com/backup-streamsim.net/archive/jsearch-2.0_05.jar.zip'
-
                 // build
                 sh "ant $ANT_OPTS build build-nbms build-source-zips"
-                // remove offending .xml
-                sh 'rm nbbuild/netbeans/platform/config/Modules/org-netbeans-libs-batik-read.xml'
                 // add dlight cluster from NetBeans 8.2
-                sh 'unzip -q netbeans-8.2-201609300101-dlight.zip'
-                sh 'cp -R dlight nbbuild/netbeans/'
+                sh 'wget -q https://s3.amazonaws.com/backup-streamsim.net/archive/netbeans-8.2-dlight-cluster-nbms-sourcezips.zip'
+                sh 'unzip -q netbeans-8.2-dlight-cluster-nbms-sourcezips.zip'
                 // add JavaHelp
+                sh 'wget -q https://s3.amazonaws.com/backup-streamsim.net/archive/jsearch-2.0_05.jar.zip'
                 sh 'unzip -q jsearch-2.0_05.jar.zip'
                 sh 'cp jsearch-2.0_05.jar nbbuild/netbeans/harness/antlib/'
                 // build zip
