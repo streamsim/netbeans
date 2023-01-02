@@ -3,7 +3,7 @@ ANT_OPTS='''-quiet \
     -Dbuild.compiler.deprecation=false \
     -Dcluster.config=streamsim \
     -Dreleasejson=../netbeansrelease.json \
-    -Dmetabuild.branch=release113-streamsim \
+    -Dmetabuild.branch=release160-streamsim \
 '''
 MAVEN_CLI_OPTS='''--batch-mode \
     --errors \
@@ -18,9 +18,9 @@ pipeline {
     agent any
 
     tools {
-        jdk 'OpenJDK_1.8.0_322'
-        ant 'Ant 1.10.4 (NetBeans 11.3)'
-        maven 'Maven 3.8.4'
+        jdk 'OpenJDK_11.0.17+8'
+        ant 'Ant 1.10.12'
+        maven 'Maven 3.8.7'
     }
 
     stages {
@@ -40,9 +40,9 @@ pipeline {
                 sh 'unzip -q jsearch-2.0_05.jar.zip'
                 sh 'cp jsearch-2.0_05.jar nbbuild/netbeans/harness/antlib/'
                 // build zip
-                sh 'cd nbbuild && zip -r netbeans-release113-streamsim.zip netbeans && cd ..'
+                sh 'cd nbbuild && zip -r netbeans-release160-streamsim.zip netbeans && cd ..'
                 // build nbms zip
-                sh 'cd nbbuild && zip -r netbeans-nbms-release113-streamsim.zip nbms && cd ..'
+                sh 'cd nbbuild && zip -r netbeans-nbms-release160-streamsim.zip nbms && cd ..'
             }
         }
         stage('Deploy') {
