@@ -4,6 +4,7 @@ ANT_OPTS='''-quiet \
     -Dcluster.config=streamsim \
     -Dreleasejson=../netbeansrelease.json \
     -Dmetabuild.branch=release160-streamsim \
+    -Duse.pack200=false \
 '''
 MAVEN_CLI_OPTS='''--batch-mode \
     --errors \
