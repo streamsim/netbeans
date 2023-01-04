@@ -40,7 +40,7 @@ import org.apache.batik.bridge.BridgeContext;
 import org.apache.batik.bridge.DocumentLoader;
 import org.apache.batik.bridge.ExternalResourceSecurity;
 import org.apache.batik.bridge.GVTBuilder;
-import org.apache.batik.bridge.NoLoadExternalResourceSecurity;
+import org.apache.batik.bridge.RelaxedExternalResourceSecurity;
 import org.apache.batik.bridge.UserAgent;
 import org.apache.batik.bridge.UserAgentAdapter;
 import org.apache.batik.ext.awt.image.GraphicsUtil;
@@ -145,7 +145,7 @@ final class SVGIcon extends CachedHiDPIIcon {
               @Override
               public ExternalResourceSecurity getExternalResourceSecurity(
                   ParsedURL resourceURL, ParsedURL docURL) {
-                return new NoLoadExternalResourceSecurity();
+                return new RelaxedExternalResourceSecurity(resourceURL, docURL);
               }
             };
             DocumentLoader loader = new DocumentLoader(userAgent);
