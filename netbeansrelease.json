@@ -1,17 +1,17 @@
 {
-    "release160-streamsim": {
+    "release170-streamsim": {
         "position": "1",
         "ant": "ant_latest",
         "jdk": "jdk_11_latest",
         "jdk_apidoc": "https://docs.oracle.com/en/java/javase/11/docs/api/",
         "maven": "maven_3_latest",
-        "versionName": "16",
-        "vsixVersion": "16.0.0",
-        "mavenversion": "RELEASE160-STREAMSIM",
+        "versionName": "17",
+        "vsixVersion": "17.0.0",
+        "mavenversion": "RELEASE170-STREAMSIM",
         "tlp": "true",
-        "apidocurl": "https://bits.netbeans.org/16/javadoc",
-        "update_url": "https://netbeans.apache.org/nb/updates/16/updates.xml.gz?{$netbeans.hash.code}",
-        "plugin_url": "https://netbeans.apache.org/nb/plugins/16/catalog.xml.gz",
+        "apidocurl": "https://bits.netbeans.org/17/javadoc",
+        "update_url": "https://netbeans.apache.org/nb/updates/17/updates.xml.gz?{$netbeans.hash.code}",
+        "plugin_url": "https://netbeans.apache.org/nb/plugins/17/catalog.xml.gz",
         "publish_apidoc":"false",
         "releasedate": {
             "day": "-",

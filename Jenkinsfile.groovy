@@ -3,7 +3,7 @@ ANT_OPTS='''-quiet \
     -Dbuild.compiler.deprecation=false \
     -Dcluster.config=streamsim \
     -Dreleasejson=../netbeansrelease.json \
-    -Dmetabuild.branch=release160-streamsim \
+    -Dmetabuild.branch=release170-streamsim \
     -Duse.pack200=false \
 '''
 MAVEN_CLI_OPTS='''--batch-mode \
@@ -40,9 +40,9 @@ pipeline {
                 sh 'unzip -q jsearch-2.0_05.jar.zip'
                 sh 'cp jsearch-2.0_05.jar nbbuild/netbeans/harness/antlib/'
                 // build zip
-                sh 'cd nbbuild && zip -r netbeans-release160-streamsim.zip netbeans && cd ..'
+                sh 'cd nbbuild && zip -r netbeans-release170-streamsim.zip netbeans && cd ..'
                 // build nbms zip
-                sh 'cd nbbuild && zip -r netbeans-nbms-release160-streamsim.zip nbms && cd ..'
+                sh 'cd nbbuild && zip -r netbeans-nbms-release170-streamsim.zip nbms && cd ..'
             }
         }
         stage('Deploy') {

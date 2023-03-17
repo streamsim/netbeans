@@ -11,7 +11,7 @@ variables:
         -Dbuild.compiler.deprecation=false
         -Dcluster.config=streamsim
         -Dreleasejson=../netbeansrelease.json
-        -Dmetabuild.branch=release160-streamsim
+        -Dmetabuild.branch=release170-streamsim
         -Duse.pack200=false
   # This will suppress any download for dependencies and plugins or upload messages which would clutter the console log.
   # `showDateTime` will show the passed time in milliseconds. You need to specify `--batch-mode` to make this work.
@@ -47,15 +47,15 @@ build:
     - unzip -q jsearch-2.0_05.jar.zip
     - cp jsearch-2.0_05.jar nbbuild/netbeans/harness/antlib/
     # build zip
-    - cd nbbuild && zip -r netbeans-release160-streamsim.zip netbeans && cd ..
+    - cd nbbuild && zip -r netbeans-release170-streamsim.zip netbeans && cd ..
     # build nbms zip
-    - cd nbbuild && zip -r netbeans-nbms-release160-streamsim.zip nbms && cd ..
+    - cd nbbuild && zip -r netbeans-nbms-release170-streamsim.zip nbms && cd ..
   artifacts:
       paths:
         - nbbuild/netbeans
         - nbbuild/nbms
-        - nbbuild/netbeans-release160-streamsim.zip
-        - nbbuild/netbeans-nbms-release160-streamsim.zip
+        - nbbuild/netbeans-release170-streamsim.zip
+        - nbbuild/netbeans-nbms-release170-streamsim.zip
         - nbbuild/build/source-zips
 
 deploy:
