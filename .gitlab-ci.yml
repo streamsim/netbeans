@@ -56,6 +56,7 @@ build:
         - nbbuild/nbms
         - nbbuild/netbeans-release160-streamsim.zip
         - nbbuild/netbeans-nbms-release160-streamsim.zip
+        - nbbuild/build/source-zips
 
 deploy:
   stage: deploy_stage
