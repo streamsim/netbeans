@@ -37,8 +37,8 @@ build:
     # build NetBeans Platform, NBMs and source zips
     - ant $OPTS build build-nbms build-source-zips
     # remove offending .xml files
-    - rm nbbuild/netbeans/platform/config/Modules/org-netbeans-libs-batik-read.xml
-    - rm nbbuild/netbeans/platform/config/Modules/org-openide-util-ui-svg.xml
+    - rm -f nbbuild/netbeans/platform/config/Modules/org-netbeans-libs-batik-read.xml
+    - rm -f nbbuild/netbeans/platform/config/Modules/org-openide-util-ui-svg.xml
     # add dlight cluster, NBMs and source zips from NetBeans 8.2
     - wget -q https://s3.amazonaws.com/backup-streamsim.net/archive/netbeans-8.2-dlight-cluster-nbms-sourcezips.zip
     - unzip -q netbeans-8.2-dlight-cluster-nbms-sourcezips.zip
