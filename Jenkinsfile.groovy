@@ -29,9 +29,6 @@ pipeline {
             steps {
                 // build
                 sh "ant $ANT_OPTS build build-nbms build-source-zips"
-                // remove offending .xml files
-                sh 'rm -f nbbuild/netbeans/platform/config/Modules/org-netbeans-libs-batik-read.xml'
-                sh 'rm -f nbbuild/netbeans/platform/config/Modules/org-openide-util-ui-svg.xml'
                 // add dlight cluster from NetBeans 8.2
                 sh 'wget -q https://s3.amazonaws.com/backup-streamsim.net/archive/netbeans-8.2-dlight-cluster-nbms-sourcezips.zip'
                 sh 'unzip -q netbeans-8.2-dlight-cluster-nbms-sourcezips.zip'
