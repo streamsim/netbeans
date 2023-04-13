@@ -4,6 +4,7 @@ ANT_OPTS='''-quiet \
     -Dcluster.config=streamsim \
     -Dreleasejson=../netbeansrelease.json \
     -Dmetabuild.branch=release170-streamsim \
+    -Dbuildnumber=17-dev-49085d2b40f229486143294657849c5966dd5162 \
     -Duse.pack200=false \
 '''
 MAVEN_CLI_OPTS='''--batch-mode \
@@ -13,7 +14,7 @@ MAVEN_CLI_OPTS='''--batch-mode \
     -DinstallAtEnd=true \
     -DdeployAtEnd=true \
     -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn \
- '''
+'''
 
 pipeline {
     agent any
