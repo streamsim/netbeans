@@ -17,6 +17,17 @@ MAVEN_CLI_OPTS='''--batch-mode \
     -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn \
 '''
 
+SETUP:
+{
+    def scmChange = !currentBuild.rawBuild.getCauses()[0].toString().contains('UserIdCause')
+    def firstBuild = (params.DEPLOY == null)
+    if (firstBuild || scmChange) {
+        DEPLOY = false
+    } else {
+        DEPLOY = params.DEPLOY
+    }
+}
+
 def checkoutGit(branch, subfolder, remote, url, isShallow = true) {
     checkout(
         [
@@ -47,6 +58,10 @@ def checkoutGit(branch, subfolder, remote, url, isShallow = true) {
 
 pipeline {
     agent any
+
+    parameters {
+        booleanParam(name: 'DEPLOY', defaultValue: false)
+    }
 
     tools {
         jdk 'JDK_19'
@@ -85,7 +100,11 @@ pipeline {
         }
         stage('Deploy') {
             steps {
-                sh "mvn $MAVEN_CLI_OPTS nb-repository:populate -s jenkins_settings.xml"
+                script {
+                    if (DEPLOY) {
+                        sh "mvn $MAVEN_CLI_OPTS nb-repository:populate -s jenkins_settings.xml"
+                    }
+                }
             }
         }
     }
