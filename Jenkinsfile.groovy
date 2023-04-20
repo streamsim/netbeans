@@ -49,7 +49,7 @@ pipeline {
     agent any
 
     tools {
-        jdk 'OpenJDK_11.0.17+8'
+        jdk 'JDK_19'
         ant 'Ant 1.10.12'
         maven 'Maven 3.8.7'
     }
