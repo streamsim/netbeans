@@ -239,7 +239,7 @@ public class RunTagWizard {
                     }
                 }
                 config.put("Env", env);
-                Pair<DockerContainer, ActionStreamResult> result = remote.run(name, config);
+                Pair<DockerContainer, ActionStreamResult> result = remote.create(name, config);
 
                 OutputUtils.openTerminal(result.first(), result.second(), interactive, true, null);
             } catch (DockerException | RuntimeException ex) {
