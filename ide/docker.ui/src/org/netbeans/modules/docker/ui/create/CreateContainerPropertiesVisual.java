@@ -21,6 +21,8 @@ package org.netbeans.modules.docker.ui.create;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Vector;
+import javax.swing.DefaultListSelectionModel;
+import javax.swing.ListSelectionModel;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -198,15 +200,22 @@ public class CreateContainerPropertiesVisual extends javax.swing.JPanel {
 
         org.openide.awt.Mnemonics.setLocalizedText(addButton, org.openide.util.NbBundle.getMessage(CreateContainerPropertiesVisual.class, "CreateContainerPropertiesVisual.addButton.text")); // NOI18N
         addButton.setEnabled(false);
+        addButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addButtonActionPerformed(evt);
+            }
+        });
 
         org.openide.awt.Mnemonics.setLocalizedText(deleteButton, org.openide.util.NbBundle.getMessage(CreateContainerPropertiesVisual.class, "CreateContainerPropertiesVisual.deleteButton.text")); // NOI18N
         deleteButton.setEnabled(false);
+        deleteButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteButtonActionPerformed(evt);
+            }
+        });
 
         volumesTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null},
-                {null, null},
-                {null, null},
                 {null, null}
             },
             new String [] {
@@ -294,6 +303,26 @@ public class CreateContainerPropertiesVisual extends javax.swing.JPanel {
         addButton.setEnabled(selected);
         deleteButton.setEnabled(selected);
     }//GEN-LAST:event_mountVolumesCheckBoxStateChanged
+
+    private void addButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addButtonActionPerformed
+        ((DefaultTableModel) volumesTable.getModel()).addRow(new Object[]{null, null});
+    }//GEN-LAST:event_addButtonActionPerformed
+
+    private void deleteButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteButtonActionPerformed
+        final int selectedRow = volumesTable.getSelectedRow();
+        if (selectedRow == -1) {
+            return;
+        }
+        ((DefaultTableModel) volumesTable.getModel()).removeRow(selectedRow);
+
+        if (volumesTable.getRowCount() == 0) {
+            return;
+        }
+        final int newSelectedRow = selectedRow <= volumesTable.getRowCount() - 1
+                ? selectedRow
+                : volumesTable.getRowCount() - 1;
+        volumesTable.getSelectionModel().setSelectionInterval(newSelectedRow, newSelectedRow);
+    }//GEN-LAST:event_deleteButtonActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
