@@ -176,7 +176,7 @@ meth public org.netbeans.modules.docker.api.DockerImage commit(org.netbeans.modu
 meth public org.netbeans.modules.docker.api.DockerImageDetail getDetail(org.netbeans.modules.docker.api.DockerImage) throws org.netbeans.modules.docker.api.DockerException
 meth public org.netbeans.modules.docker.api.DockerTag tag(org.netbeans.modules.docker.api.DockerTag,java.lang.String,java.lang.String,boolean) throws org.netbeans.modules.docker.api.DockerException
 meth public org.netbeans.modules.docker.api.DockerfileDetail getDetail(org.openide.filesystems.FileObject) throws java.io.IOException
-meth public org.openide.util.Pair<org.netbeans.modules.docker.api.DockerContainer,org.netbeans.modules.docker.api.ActionStreamResult> run(java.lang.String,org.json.simple.JSONObject) throws org.netbeans.modules.docker.api.DockerException
+meth public org.openide.util.Pair<org.netbeans.modules.docker.api.DockerContainer,org.netbeans.modules.docker.api.ActionStreamResult> create(java.lang.String,org.json.simple.JSONObject) throws org.netbeans.modules.docker.api.DockerException
 meth public void pause(org.netbeans.modules.docker.api.DockerContainer) throws org.netbeans.modules.docker.api.DockerException
 meth public void pull(java.lang.String,org.netbeans.modules.docker.api.StatusEvent$Listener) throws org.netbeans.modules.docker.api.DockerException
 meth public void push(org.netbeans.modules.docker.api.DockerTag,org.netbeans.modules.docker.api.StatusEvent$Listener) throws org.netbeans.modules.docker.api.DockerException

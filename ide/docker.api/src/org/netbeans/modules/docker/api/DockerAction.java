@@ -937,7 +937,7 @@ public class DockerAction {
     }
 
     // this call is BLOCKING
-    public Pair<DockerContainer, ActionStreamResult> run(String name, JSONObject configuration) throws DockerException {
+    public Pair<DockerContainer, ActionStreamResult> create(String name, JSONObject configuration) throws DockerException {
         Endpoint s = null;
         try {
             s = createEndpoint();
@@ -982,18 +982,6 @@ public class DockerAction {
                     "/" + name,
                     DockerContainer.Status.STOPPED);
             ActionStreamResult r = attach(container, true, true);
-
-            os.write(("POST /containers/" + id + "/start HTTP/1.1\r\n").getBytes(ISO_8859_1));
-            HttpUtils.configureHeaders(os, defaultHeaders, getHostHeader());
-            os.write("\r\n".getBytes(ISO_8859_1));
-            os.flush();
-
-            response = HttpUtils.readResponse(is);
-            if (response.getCode() != HttpURLConnection.HTTP_NO_CONTENT) {
-                String error = HttpUtils.readContent(is, response);
-                throw codeToException(response.getCode(),
-                        error != null ? error : response.getMessage());
-            }
 
             return Pair.of(container, r);
         } catch (MalformedURLException e) {

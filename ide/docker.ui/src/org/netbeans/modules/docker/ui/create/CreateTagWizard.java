@@ -114,11 +114,11 @@ public class CreateTagWizard {
         wiz.setTitleFormat(new MessageFormat("{0}"));
         wiz.setTitle(Bundle.LBL_Create(getImage(tag)));
         if (DialogDisplayer.getDefault().notify(wiz) == WizardDescriptor.FINISH_OPTION) {
-            run(tag, wiz);
+            create(tag, wiz);
         }
     }
 
-    private void run(final DockerTag tag, final WizardDescriptor wiz) {
+    private void create(final DockerTag tag, final WizardDescriptor wiz) {
         final Boolean portRandom = (Boolean) wiz.getProperty(RANDOM_BIND_PROPERTY);
         List<PortMapping> mappingVar = (List<PortMapping>) wiz.getProperty(PORT_MAPPING_PROPERTY);
         if (mappingVar == null) {
@@ -203,9 +203,7 @@ public class CreateTagWizard {
                             binds.add(volumesTable.get(target) + ":" + target);
                         }
                     }
-                    Pair<DockerContainer, ActionStreamResult> result = remote.run(name, config);
-
-                    OutputUtils.openTerminal(result.first(), result.second(), interactive, true, null);
+                    remote.create(name, config);
                 } catch (Exception ex) {
                     LOGGER.log(Level.INFO, null, ex);
                     String msg = ex.getLocalizedMessage();

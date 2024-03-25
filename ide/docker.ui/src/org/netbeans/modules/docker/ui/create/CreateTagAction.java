@@ -53,7 +53,7 @@ public class CreateTagAction extends NodeAction {
         return true;
     }
 
-    @NbBundle.Messages("LBL_CreateTagAction=Create...")
+    @NbBundle.Messages("LBL_CreateTagAction=Create Container...")
     @Override
     public String getName() {
         return Bundle.LBL_CreateTagAction();
