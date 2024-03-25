@@ -25,6 +25,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.channels.Channels;
 import java.nio.channels.SocketChannel;
+import java.net.URL;
 
 /**
  *
@@ -60,7 +61,7 @@ public interface Endpoint extends Closeable {
             @Override
             public InputStream getInputStream() throws IOException {
                 return Channels.newInputStream(channel);
-}
+            }
 
             @Override
             public OutputStream getOutputStream() throws IOException {
@@ -70,6 +71,26 @@ public interface Endpoint extends Closeable {
             @Override
             public void close() throws IOException {
                 channel.close();
+            }
+        };
+    }
+
+    public static Endpoint forNamedPipe(URL url) throws IOException {
+        NamedPipeURLConnection connection = new NamedPipeURLConnection(url);
+        return new Endpoint() {
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return connection.getInputStream();
+            }
+
+            @Override
+            public OutputStream getOutputStream() throws IOException {
+                return connection.getOutputStream();
+            }
+
+            @Override
+            public void close() throws IOException {
+                connection.close();
             }
         };
     }
