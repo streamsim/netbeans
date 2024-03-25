@@ -53,6 +53,13 @@ public class DockerConnectionPanel implements WizardDescriptor.ExtendedAsynchron
 
     private static final Logger LOGGER = Logger.getLogger(DockerConnectionPanel.class.getName());
 
+    private static final File WINDOWS_DOCKER_ENGINE_FILE = new File("\\\\.\\pipe\\dockerDesktopWindowsEngine"); // NOI18N
+    private static final File LINUX_DOCKER_ENGINE_FILE = new File("\\\\.\\pipe\\dockerDesktopLinuxEngine"); // NOI18N
+    private static final File DOCKER_ENGINE_FILE = new File("\\\\.\\pipe\\docker_engine"); // NOI18N
+    private static final String DOCKER_ENGINE_NAMED_PIPE_URL = "npipe:////./pipe/docker_engine"; // NOI18N
+    private static final String LINUX_DOCKER_ENGINE_NAMED_PIPE_URL = "npipe:////./pipe/dockerDesktopLinuxEngine"; // NOI18N
+    private static final String WINDOWS_DOCKER_ENGINE_NAMED_PIPE_URL = "npipe:////./pipe/dockerDesktopWindowsEngine"; // NOI18N
+
     private static final Pattern REMOTE_HOST_PATTERN = Pattern.compile("^(tcp://)[^/:](:\\d+)($|/.*)"); // NOI18N
 
     private static final String CONNECTION_TEST = "connection_test";
@@ -417,6 +424,16 @@ public class DockerConnectionPanel implements WizardDescriptor.ExtendedAsynchron
         if (url == null) {
             if (Utilities.isMac() || Utilities.isWindows()) {
                 if (Utilities.isWindows()) {
+                    if (DOCKER_ENGINE_FILE.exists()) {
+                        return DOCKER_ENGINE_NAMED_PIPE_URL;
+                    }
+                    if (LINUX_DOCKER_ENGINE_FILE.exists()) {
+                        return LINUX_DOCKER_ENGINE_NAMED_PIPE_URL;
+                    }
+                    if (WINDOWS_DOCKER_ENGINE_FILE.exists()) {
+                        return WINDOWS_DOCKER_ENGINE_NAMED_PIPE_URL;
+                    }
+                    
                     String appData = System.getenv("APPDATA"); // NOI18N
                     // docker beta detection
                     if (appData != null && new File(appData, "Docker" + File.separatorChar + ".trackid").isFile()) { // NOI18N
@@ -452,6 +469,13 @@ public class DockerConnectionPanel implements WizardDescriptor.ExtendedAsynchron
         }
 
         if (Utilities.isMac() || Utilities.isWindows()) {
+            if (Utilities.isWindows()
+                    && (DOCKER_ENGINE_FILE.exists()
+                    || LINUX_DOCKER_ENGINE_FILE.exists()
+                    || WINDOWS_DOCKER_ENGINE_FILE.exists())) {
+                return null;
+            }
+
             // dockertoolbox
             File folder = new File(System.getProperty("user.home"), ".docker" + File.separator // NOI18N
                     + "machine" + File.separator + "machines" + File.separator + "default"); // NOI18N
