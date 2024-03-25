@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.URL;
 
 /**
  *
@@ -53,4 +54,23 @@ public interface Endpoint extends Closeable {
         };
     }
 
+    public static Endpoint forNamedPipe(URL url) throws IOException {
+        NamedPipeURLConnection connection = new NamedPipeURLConnection(url);
+        return new Endpoint() {
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return connection.getInputStream();
+            }
+
+            @Override
+            public OutputStream getOutputStream() throws IOException {
+                return connection.getOutputStream();
+            }
+
+            @Override
+            public void close() throws IOException {
+                connection.close();
+            }
+        };
+    }
 }
