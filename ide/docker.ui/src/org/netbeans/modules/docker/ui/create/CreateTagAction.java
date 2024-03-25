@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.netbeans.modules.docker.ui.run;
+package org.netbeans.modules.docker.ui.create;
 
 import org.netbeans.modules.docker.api.DockerTag;
 import org.openide.nodes.Node;
@@ -28,7 +28,7 @@ import org.openide.util.actions.NodeAction;
  *
  * @author Petr Hejl
  */
-public class RunTagAction extends NodeAction {
+public class CreateTagAction extends NodeAction {
 
     @Override
     protected void performAction(Node[] activatedNodes) {
@@ -53,10 +53,10 @@ public class RunTagAction extends NodeAction {
         return true;
     }
 
-    @NbBundle.Messages("LBL_RunTagAction=Run...")
+    @NbBundle.Messages("LBL_CreateTagAction=Create...")
     @Override
     public String getName() {
-        return Bundle.LBL_RunTagAction();
+        return Bundle.LBL_CreateTagAction();
     }
 
     @Override
@@ -70,7 +70,7 @@ public class RunTagAction extends NodeAction {
     }
 
     private void perform(DockerTag tag) {
-        RunTagWizard wizard = new RunTagWizard(tag);
+        CreateTagWizard wizard = new CreateTagWizard(tag);
         wizard.show();
     }
 }

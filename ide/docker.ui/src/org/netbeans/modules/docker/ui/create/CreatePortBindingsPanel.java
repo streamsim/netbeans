@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.netbeans.modules.docker.ui.run;
+package org.netbeans.modules.docker.ui.create;
 
 import org.netbeans.modules.docker.api.PortMapping;
 import java.util.Collections;
@@ -33,7 +33,7 @@ import org.openide.util.ChangeSupport;
 import org.openide.util.HelpCtx;
 import org.openide.util.NbBundle;
 
-public class RunPortBindingsPanel implements WizardDescriptor.Panel<WizardDescriptor>, ChangeListener {
+public class CreatePortBindingsPanel implements WizardDescriptor.Panel<WizardDescriptor>, ChangeListener {
 
     private final ChangeSupport changeSupport = new ChangeSupport(this);
 
@@ -43,11 +43,11 @@ public class RunPortBindingsPanel implements WizardDescriptor.Panel<WizardDescri
      * The visual component that displays this panel. If you need to access the
      * component from this class, just use getComponent().
      */
-    private RunPortBindingsVisual component;
+    private CreatePortBindingsVisual component;
 
     private WizardDescriptor wizard;
 
-    public RunPortBindingsPanel(DockerImageDetail info) {
+    public CreatePortBindingsPanel(DockerImageDetail info) {
         this.info = info;
     }
 
@@ -56,9 +56,9 @@ public class RunPortBindingsPanel implements WizardDescriptor.Panel<WizardDescri
     // but never displayed, or not all panels are displayed, it is better to
     // create only those which really need to be visible.
     @Override
-    public RunPortBindingsVisual getComponent() {
+    public CreatePortBindingsVisual getComponent() {
         if (component == null) {
-            component = new RunPortBindingsVisual(info);
+            component = new CreatePortBindingsVisual(info);
             component.addChangeListener(this);
         }
         return component;
@@ -150,9 +150,9 @@ public class RunPortBindingsPanel implements WizardDescriptor.Panel<WizardDescri
             wizard = wiz;
         }
 
-        Boolean portRandom = (Boolean) wiz.getProperty(RunTagWizard.RANDOM_BIND_PROPERTY);
-        component.setRandomBind(portRandom != null ? portRandom : RunTagWizard.RANDOM_BIND_DEFAULT);
-        List<PortMapping> mapping = (List<PortMapping>) wiz.getProperty(RunTagWizard.PORT_MAPPING_PROPERTY);
+        Boolean portRandom = (Boolean) wiz.getProperty(CreateTagWizard.RANDOM_BIND_PROPERTY);
+        component.setRandomBind(portRandom != null ? portRandom : CreateTagWizard.RANDOM_BIND_DEFAULT);
+        List<PortMapping> mapping = (List<PortMapping>) wiz.getProperty(CreateTagWizard.PORT_MAPPING_PROPERTY);
         component.setPortMapping(mapping != null ? mapping : Collections.<PortMapping>emptyList());
 
         // XXX revalidate; is this bug?
@@ -161,8 +161,8 @@ public class RunPortBindingsPanel implements WizardDescriptor.Panel<WizardDescri
 
     @Override
     public void storeSettings(WizardDescriptor wiz) {
-        wiz.putProperty(RunTagWizard.RANDOM_BIND_PROPERTY, component.isRandomBind());
-        wiz.putProperty(RunTagWizard.PORT_MAPPING_PROPERTY, component.getPortMapping());
+        wiz.putProperty(CreateTagWizard.RANDOM_BIND_PROPERTY, component.isRandomBind());
+        wiz.putProperty(CreateTagWizard.PORT_MAPPING_PROPERTY, component.getPortMapping());
     }
 
     @Override

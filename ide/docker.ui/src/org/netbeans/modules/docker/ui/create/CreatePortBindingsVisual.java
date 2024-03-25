@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.netbeans.modules.docker.ui.run;
+package org.netbeans.modules.docker.ui.create;
 
 import org.netbeans.modules.docker.api.PortMapping;
 import java.awt.Component;
@@ -45,7 +45,7 @@ import org.openide.util.NbBundle;
  *
  * @author Petr Hejl
  */
-public class RunPortBindingsVisual extends javax.swing.JPanel {
+public class CreatePortBindingsVisual extends javax.swing.JPanel {
 
     private final ChangeSupport changeSupport = new ChangeSupport(this);
 
@@ -54,9 +54,9 @@ public class RunPortBindingsVisual extends javax.swing.JPanel {
     private final PortMappingModel model = new PortMappingModel();
 
     /**
-     * Creates new form RunNetworkVisual
+     * Creates new form CreatePortBindingsVisual
      */
-    public RunPortBindingsVisual(DockerImageDetail info) {
+    public CreatePortBindingsVisual(DockerImageDetail info) {
         initComponents();
         this.info = info;
 
@@ -112,10 +112,10 @@ public class RunPortBindingsVisual extends javax.swing.JPanel {
         model.setMappings(mapping);
     }
 
-    @NbBundle.Messages("LBL_RunPortBindings=Port Bindings")
+    @NbBundle.Messages("LBL_CreatePortBindings=Port Bindings")
     @Override
     public String getName() {
-        return Bundle.LBL_RunPortBindings();
+        return Bundle.LBL_CreatePortBindings();
     }
 
     private static final class PortMappingModel extends AbstractTableModel {
@@ -323,32 +323,32 @@ public class RunPortBindingsVisual extends javax.swing.JPanel {
         addExposedButton = new javax.swing.JButton();
         randomBindCheckBox = new javax.swing.JCheckBox();
 
-        org.openide.awt.Mnemonics.setLocalizedText(portMappingLabel, org.openide.util.NbBundle.getMessage(RunPortBindingsVisual.class, "RunPortBindingsVisual.portMappingLabel.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(portMappingLabel, org.openide.util.NbBundle.getMessage(CreatePortBindingsVisual.class, "CreatePortBindingsVisual.portMappingLabel.text")); // NOI18N
 
         jScrollPane1.setViewportView(portMappingTable);
 
-        org.openide.awt.Mnemonics.setLocalizedText(addButton, org.openide.util.NbBundle.getMessage(RunPortBindingsVisual.class, "RunPortBindingsVisual.addButton.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(addButton, org.openide.util.NbBundle.getMessage(CreatePortBindingsVisual.class, "CreatePortBindingsVisual.addButton.text")); // NOI18N
         addButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 addButtonActionPerformed(evt);
             }
         });
 
-        org.openide.awt.Mnemonics.setLocalizedText(removeButton, org.openide.util.NbBundle.getMessage(RunPortBindingsVisual.class, "RunPortBindingsVisual.removeButton.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(removeButton, org.openide.util.NbBundle.getMessage(CreatePortBindingsVisual.class, "CreatePortBindingsVisual.removeButton.text")); // NOI18N
         removeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 removeButtonActionPerformed(evt);
             }
         });
 
-        org.openide.awt.Mnemonics.setLocalizedText(addExposedButton, org.openide.util.NbBundle.getMessage(RunPortBindingsVisual.class, "RunPortBindingsVisual.addExposedButton.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(addExposedButton, org.openide.util.NbBundle.getMessage(CreatePortBindingsVisual.class, "CreatePortBindingsVisual.addExposedButton.text")); // NOI18N
         addExposedButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 addExposedButtonActionPerformed(evt);
             }
         });
 
-        org.openide.awt.Mnemonics.setLocalizedText(randomBindCheckBox, org.openide.util.NbBundle.getMessage(RunPortBindingsVisual.class, "RunPortBindingsVisual.randomBindCheckBox.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(randomBindCheckBox, org.openide.util.NbBundle.getMessage(CreatePortBindingsVisual.class, "CreatePortBindingsVisual.randomBindCheckBox.text")); // NOI18N
         randomBindCheckBox.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 randomBindCheckBoxItemStateChanged(evt);
