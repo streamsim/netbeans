@@ -98,7 +98,7 @@ public class RunTagWizard {
     @NbBundle.Messages({
         "MSG_ReceivingImageInfo=Receiving Image Details",
         "# {0} - Image being run",
-        "LBL_Run=Run {0}"
+        "LBL_Run=Create {0}"
     })
     public void show() {
         DockerImageDetail info = BaseProgressUtils.showProgressDialogAndRun(

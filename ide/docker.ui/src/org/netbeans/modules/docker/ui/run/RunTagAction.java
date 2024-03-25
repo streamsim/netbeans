@@ -53,7 +53,7 @@ public class RunTagAction extends NodeAction {
         return true;
     }
 
-    @NbBundle.Messages("LBL_RunTagAction=Run...")
+    @NbBundle.Messages("LBL_RunTagAction=Create...")
     @Override
     public String getName() {
         return Bundle.LBL_RunTagAction();
