@@ -1274,6 +1274,8 @@ public class DockerAction {
                 AFUNIXSocketAddress sockAdd = AFUNIXSocketAddress.of(new File(realUrl.getFile()));
                 s.connect(sockAdd);
                 return Endpoint.forSocket(s);
+            } else if ("npipe".equals(realUrl.getProtocol())) {
+                return Endpoint.forNamedPipe(realUrl);
             } else {
                 throw new IOException("Unknown protocol: " + realUrl.getProtocol());
             }

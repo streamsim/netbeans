@@ -93,7 +93,7 @@ public class DockerConnectionPanel implements WizardDescriptor.ExtendedAsynchron
         "MSG_AlreadyUsedDisplayName=Display name is already used by another instance.",
         "MSG_EmptySocket=Unix socket must not be empty.",
         "MSG_EmptyUrl=URL must not be empty.",
-        "MSG_InvalidUrl=URL must be valid http or https URL.",
+        "MSG_InvalidUrl=URL must be valid http, https or npipe URL.",
         "MSG_NonExistingCertificatePath=The certificates path does not exist.",
         "# {0} - missing file",
         "MSG_CertificatePathMissingFile=The certificates path does not contain {0}.",
@@ -147,7 +147,8 @@ public class DockerConnectionPanel implements WizardDescriptor.ExtendedAsynchron
             try {
                 realUrl = new URL(url);
                 if (!"http".equals(realUrl.getProtocol()) // NOI18N
-                        && !"https".equals(realUrl.getProtocol())) { // NOI18N
+                        && !"https".equals(realUrl.getProtocol()) // NOI18N
+                        && !"npipe".equals(realUrl.getProtocol())) { // NOI18N
                     urlWrong = true;
                 }
                 int port = realUrl.getPort();
