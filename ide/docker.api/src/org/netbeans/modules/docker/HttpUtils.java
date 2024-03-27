@@ -19,6 +19,7 @@
 package org.netbeans.modules.docker;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -71,19 +72,20 @@ public final class HttpUtils {
     public static String readContent(InputStream is, Response response) throws IOException {
         Integer length = getLength(response.getHeaders());
         if (length == null || length == 0) {
-            return null;
+            length = 8192;
         }
         Charset encoding = getCharset(response.getHeaders().get("CONTENT-TYPE")); // NOI18N
-        byte[] content = new byte[length];
-        int count = 0;
-        do {
-             int current = is.read(content, count, length - count);
-             if (current < 0 && count < length) {
-                 throw new IOException("Stream closed before reading content");
-             }
-             count += current;
-        } while (count < length);
-        return new String(content, encoding);
+        byte[] buffer = new byte[length];
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        int bytesRead = is.read(buffer);
+        if (bytesRead != -1) {
+            do {
+                baos.write(buffer, 0, bytesRead);
+                bytesRead = is.read(buffer);
+            } while (bytesRead != -1);
+        }
+        return baos.toString(encoding.name());
     }
 
     public static InputStream getResponseStream(InputStream is, Response response, boolean allowSocketStream) throws IOException {
