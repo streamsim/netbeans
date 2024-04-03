@@ -141,9 +141,9 @@ public class CreateContainerPropertiesVisual extends javax.swing.JPanel {
         }
         for (Object o : model.getDataVector()) {
             Vector<String> v = (Vector<String>)o;
-            String target = v.elementAt(0);
-            String source = v.elementAt(1);
-            if (target != null && source != null) {
+            String source = v.elementAt(0);
+            String target = v.elementAt(1);
+            if (source != null && target != null) {
                 result.put(target, source);
             }
         }
@@ -219,7 +219,7 @@ public class CreateContainerPropertiesVisual extends javax.swing.JPanel {
                 {null, null}
             },
             new String [] {
-                "Target", "Source"
+                "Source", "Target"
             }
         ) {
             Class[] types = new Class [] {
