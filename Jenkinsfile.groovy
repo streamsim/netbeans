@@ -64,7 +64,7 @@ pipeline {
     }
 
     tools {
-        jdk 'JDK_19'
+        jdk 'JDK_11'
         ant 'Ant 1.10.12'
         maven 'Maven 3.8.7'
     }
