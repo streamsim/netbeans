@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.netbeans.modules.docker.ui.run;
+package org.netbeans.modules.docker.ui.create;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -26,7 +26,7 @@ import org.openide.WizardDescriptor;
 import org.openide.util.ChangeSupport;
 import org.openide.util.HelpCtx;
 
-public class RunContainerPropertiesPanel implements WizardDescriptor.Panel<WizardDescriptor>, WizardDescriptor.FinishablePanel<WizardDescriptor>, ChangeListener {
+public class CreateContainerPropertiesPanel implements WizardDescriptor.Panel<WizardDescriptor>, WizardDescriptor.FinishablePanel<WizardDescriptor>, ChangeListener {
 
     private final ChangeSupport changeSupport = new ChangeSupport(this);
 
@@ -36,11 +36,11 @@ public class RunContainerPropertiesPanel implements WizardDescriptor.Panel<Wizar
      * The visual component that displays this panel. If you need to access the
      * component from this class, just use getComponent().
      */
-    private RunContainerPropertiesVisual component;
+    private CreateContainerPropertiesVisual component;
 
     private WizardDescriptor wizard;
 
-    public RunContainerPropertiesPanel(DockerImageDetail info) {
+    public CreateContainerPropertiesPanel(DockerImageDetail info) {
         this.info = info;
     }
 
@@ -49,9 +49,9 @@ public class RunContainerPropertiesPanel implements WizardDescriptor.Panel<Wizar
     // but never displayed, or not all panels are displayed, it is better to
     // create only those which really need to be visible.
     @Override
-    public RunContainerPropertiesVisual getComponent() {
+    public CreateContainerPropertiesVisual getComponent() {
         if (component == null) {
-            component = new RunContainerPropertiesVisual();
+            component = new CreateContainerPropertiesVisual();
             component.addChangeListener(this);
         }
         return component;
@@ -104,16 +104,16 @@ public class RunContainerPropertiesPanel implements WizardDescriptor.Panel<Wizar
             wizard = wiz;
         }
 
-        component.setContainerName((String) wiz.getProperty(RunTagWizard.NAME_PROPERTY));
-        component.setCommand((String) wiz.getProperty(RunTagWizard.COMMAND_PROPERTY));
-        component.setUser((String) wiz.getProperty(RunTagWizard.USER_PROPERTY));
-        Boolean interactive = (Boolean) wiz.getProperty(RunTagWizard.INTERACTIVE_PROPERTY);
+        component.setContainerName((String) wiz.getProperty(CreateTagWizard.NAME_PROPERTY));
+        component.setCommand((String) wiz.getProperty(CreateTagWizard.COMMAND_PROPERTY));
+        component.setUser((String) wiz.getProperty(CreateTagWizard.USER_PROPERTY));
+        Boolean interactive = (Boolean) wiz.getProperty(CreateTagWizard.INTERACTIVE_PROPERTY);
         component.setInteractive(interactive != null ? interactive : false);
-        Boolean tty = (Boolean) wiz.getProperty(RunTagWizard.TTY_PROPERTY);
+        Boolean tty = (Boolean) wiz.getProperty(CreateTagWizard.TTY_PROPERTY);
         component.setTty(tty != null ? tty : false);
-        Boolean privileged = (Boolean) wiz.getProperty(RunTagWizard.PRIVILEGED_PROPERTY);
+        Boolean privileged = (Boolean) wiz.getProperty(CreateTagWizard.PRIVILEGED_PROPERTY);
         component.setPrivileged(privileged != null ? privileged : false);
-        Boolean mountVolumes = (Boolean) wiz.getProperty(RunTagWizard.VOLUMES_PROPERTY);
+        Boolean mountVolumes = (Boolean) wiz.getProperty(CreateTagWizard.VOLUMES_PROPERTY);
         component.setMountVolumesSelected(mountVolumes != null ? mountVolumes : false);
         // XXX revalidate; is this bug?
         changeSupport.fireChange();
@@ -121,14 +121,14 @@ public class RunContainerPropertiesPanel implements WizardDescriptor.Panel<Wizar
 
     @Override
     public void storeSettings(WizardDescriptor wiz) {
-        wiz.putProperty(RunTagWizard.NAME_PROPERTY, component.getContainerName());
-        wiz.putProperty(RunTagWizard.COMMAND_PROPERTY, component.getCommand());
-        wiz.putProperty(RunTagWizard.USER_PROPERTY, component.getUser());
-        wiz.putProperty(RunTagWizard.INTERACTIVE_PROPERTY, component.isInteractive());
-        wiz.putProperty(RunTagWizard.TTY_PROPERTY, component.hasTty());
-        wiz.putProperty(RunTagWizard.PRIVILEGED_PROPERTY, component.isPrivileged());
-        wiz.putProperty(RunTagWizard.VOLUMES_PROPERTY, component.areMountVolumesSelected());
-        wiz.putProperty(RunTagWizard.VOLUMES_TABLE_PROPERTY, component.getVolumesTable());
+        wiz.putProperty(CreateTagWizard.NAME_PROPERTY, component.getContainerName());
+        wiz.putProperty(CreateTagWizard.COMMAND_PROPERTY, component.getCommand());
+        wiz.putProperty(CreateTagWizard.USER_PROPERTY, component.getUser());
+        wiz.putProperty(CreateTagWizard.INTERACTIVE_PROPERTY, component.isInteractive());
+        wiz.putProperty(CreateTagWizard.TTY_PROPERTY, component.hasTty());
+        wiz.putProperty(CreateTagWizard.PRIVILEGED_PROPERTY, component.isPrivileged());
+        wiz.putProperty(CreateTagWizard.VOLUMES_PROPERTY, component.areMountVolumesSelected());
+        wiz.putProperty(CreateTagWizard.VOLUMES_TABLE_PROPERTY, component.getVolumesTable());
     }
 
     @Override

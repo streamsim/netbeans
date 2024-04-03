@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.netbeans.modules.docker.ui.run;
+package org.netbeans.modules.docker.ui.create;
 
 import org.netbeans.modules.docker.api.PortMapping;
 import java.text.MessageFormat;
@@ -55,7 +55,7 @@ import org.openide.NotifyDescriptor;
  *
  * @author Petr Hejl
  */
-public class RunTagWizard {
+public class CreateTagWizard {
 
     public static final String NAME_PROPERTY = "name";
 
@@ -79,25 +79,25 @@ public class RunTagWizard {
 
     public static final boolean RANDOM_BIND_DEFAULT = false;
 
-    private static final Logger LOGGER = Logger.getLogger(RunTagWizard.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(CreateTagWizard.class.getName());
 
     private final DockerTag tag;
 
-    public RunTagWizard(DockerTag tag) {
+    public CreateTagWizard(DockerTag tag) {
         this.tag = tag;
     }
 
     @NbBundle.Messages({
         "MSG_ReceivingImageInfo=Receiving Image Details",
-        "LBL_Run=Run {0}"
+        "LBL_Create=Create {0}"
     })
     public void show() {
         DockerImageDetail info = BaseProgressUtils.showProgressDialogAndRun(
                 new DockerImageInfoRunnable(tag.getImage()), Bundle.MSG_ReceivingImageInfo(), false);
 
         List<WizardDescriptor.Panel<WizardDescriptor>> panels = new ArrayList<>();
-        panels.add(new RunContainerPropertiesPanel(info));
-        panels.add(new RunPortBindingsPanel(info));
+        panels.add(new CreateContainerPropertiesPanel(info));
+        panels.add(new CreatePortBindingsPanel(info));
         String[] steps = new String[panels.size()];
         for (int i = 0; i < panels.size(); i++) {
             JComponent c = (JComponent) panels.get(i).getComponent();
@@ -112,13 +112,13 @@ public class RunTagWizard {
         final WizardDescriptor wiz = new WizardDescriptor(new WizardDescriptor.ArrayIterator<>(panels));
         // {0} will be replaced by WizardDesriptor.Panel.getComponent().getName()
         wiz.setTitleFormat(new MessageFormat("{0}"));
-        wiz.setTitle(Bundle.LBL_Run(getImage(tag)));
+        wiz.setTitle(Bundle.LBL_Create(getImage(tag)));
         if (DialogDisplayer.getDefault().notify(wiz) == WizardDescriptor.FINISH_OPTION) {
-            run(tag, wiz);
+            create(tag, wiz);
         }
     }
 
-    private void run(final DockerTag tag, final WizardDescriptor wiz) {
+    private void create(final DockerTag tag, final WizardDescriptor wiz) {
         final Boolean portRandom = (Boolean) wiz.getProperty(RANDOM_BIND_PROPERTY);
         List<PortMapping> mappingVar = (List<PortMapping>) wiz.getProperty(PORT_MAPPING_PROPERTY);
         if (mappingVar == null) {
@@ -203,9 +203,7 @@ public class RunTagWizard {
                             binds.add(volumesTable.get(target) + ":" + target);
                         }
                     }
-                    Pair<DockerContainer, ActionStreamResult> result = remote.run(name, config);
-
-                    OutputUtils.openTerminal(result.first(), result.second(), interactive, true, null);
+                    remote.create(name, config);
                 } catch (Exception ex) {
                     LOGGER.log(Level.INFO, null, ex);
                     String msg = ex.getLocalizedMessage();

@@ -16,11 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.netbeans.modules.docker.ui.run;
+package org.netbeans.modules.docker.ui.create;
 
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Vector;
+import javax.swing.DefaultListSelectionModel;
+import javax.swing.ListSelectionModel;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -34,14 +36,14 @@ import org.openide.util.NbBundle;
  *
  * @author Petr Hejl
  */
-public class RunContainerPropertiesVisual extends javax.swing.JPanel {
+public class CreateContainerPropertiesVisual extends javax.swing.JPanel {
 
     private final ChangeSupport changeSupport = new ChangeSupport(this);
 
     /**
      * Creates new form ContainerImagePanel
      */
-    public RunContainerPropertiesVisual() {
+    public CreateContainerPropertiesVisual() {
         initComponents();
         volumesTable.setVisible(mountVolumesCheckBox.isSelected());
         nameTextField.getDocument().addDocumentListener(new DocumentListener() {
@@ -70,10 +72,10 @@ public class RunContainerPropertiesVisual extends javax.swing.JPanel {
         changeSupport.removeChangeListener(l);
     }
 
-    @NbBundle.Messages("LBL_RunContainerProperties=Container Properties")
+    @NbBundle.Messages("LBL_CreateContainerProperties=Container Properties")
     @Override
     public String getName() {
-        return Bundle.LBL_RunContainerProperties();
+        return Bundle.LBL_CreateContainerProperties();
     }
 
     public String getContainerName() {
@@ -139,9 +141,9 @@ public class RunContainerPropertiesVisual extends javax.swing.JPanel {
         }
         for (Object o : model.getDataVector()) {
             Vector<String> v = (Vector<String>)o;
-            String target = v.elementAt(0);
-            String source = v.elementAt(1);
-            if (target != null && source != null) {
+            String source = v.elementAt(0);
+            String target = v.elementAt(1);
+            if (source != null && target != null) {
                 result.put(target, source);
             }
         }
@@ -174,43 +176,50 @@ public class RunContainerPropertiesVisual extends javax.swing.JPanel {
         volumesTable = new javax.swing.JTable();
 
         commandLabel.setLabelFor(commandTextField);
-        org.openide.awt.Mnemonics.setLocalizedText(commandLabel, org.openide.util.NbBundle.getMessage(RunContainerPropertiesVisual.class, "RunContainerPropertiesVisual.commandLabel.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(commandLabel, org.openide.util.NbBundle.getMessage(CreateContainerPropertiesVisual.class, "CreateContainerPropertiesVisual.commandLabel.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(interactiveCheckBox, org.openide.util.NbBundle.getMessage(RunContainerPropertiesVisual.class, "RunContainerPropertiesVisual.interactiveCheckBox.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(interactiveCheckBox, org.openide.util.NbBundle.getMessage(CreateContainerPropertiesVisual.class, "CreateContainerPropertiesVisual.interactiveCheckBox.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(ttyCheckBox, org.openide.util.NbBundle.getMessage(RunContainerPropertiesVisual.class, "RunContainerPropertiesVisual.ttyCheckBox.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(ttyCheckBox, org.openide.util.NbBundle.getMessage(CreateContainerPropertiesVisual.class, "CreateContainerPropertiesVisual.ttyCheckBox.text")); // NOI18N
 
         nameLabel.setLabelFor(nameTextField);
-        org.openide.awt.Mnemonics.setLocalizedText(nameLabel, org.openide.util.NbBundle.getMessage(RunContainerPropertiesVisual.class, "RunContainerPropertiesVisual.nameLabel.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(nameLabel, org.openide.util.NbBundle.getMessage(CreateContainerPropertiesVisual.class, "CreateContainerPropertiesVisual.nameLabel.text")); // NOI18N
 
         nameTextField.setColumns(15);
 
-        org.openide.awt.Mnemonics.setLocalizedText(userLabel, org.openide.util.NbBundle.getMessage(RunContainerPropertiesVisual.class, "RunContainerPropertiesVisual.userLabel.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(userLabel, org.openide.util.NbBundle.getMessage(CreateContainerPropertiesVisual.class, "CreateContainerPropertiesVisual.userLabel.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(privilegedCheckBox, org.openide.util.NbBundle.getMessage(RunContainerPropertiesVisual.class, "RunContainerPropertiesVisual.privilegedCheckBox.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(privilegedCheckBox, org.openide.util.NbBundle.getMessage(CreateContainerPropertiesVisual.class, "CreateContainerPropertiesVisual.privilegedCheckBox.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(mountVolumesCheckBox, org.openide.util.NbBundle.getMessage(RunContainerPropertiesVisual.class, "RunContainerPropertiesVisual.mountVolumesCheckBox.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(mountVolumesCheckBox, org.openide.util.NbBundle.getMessage(CreateContainerPropertiesVisual.class, "CreateContainerPropertiesVisual.mountVolumesCheckBox.text")); // NOI18N
         mountVolumesCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 mountVolumesCheckBoxStateChanged(evt);
             }
         });
 
-        org.openide.awt.Mnemonics.setLocalizedText(addButton, org.openide.util.NbBundle.getMessage(RunContainerPropertiesVisual.class, "RunContainerPropertiesVisual.addButton.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(addButton, org.openide.util.NbBundle.getMessage(CreateContainerPropertiesVisual.class, "CreateContainerPropertiesVisual.addButton.text")); // NOI18N
         addButton.setEnabled(false);
+        addButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addButtonActionPerformed(evt);
+            }
+        });
 
-        org.openide.awt.Mnemonics.setLocalizedText(deleteButton, org.openide.util.NbBundle.getMessage(RunContainerPropertiesVisual.class, "RunContainerPropertiesVisual.deleteButton.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(deleteButton, org.openide.util.NbBundle.getMessage(CreateContainerPropertiesVisual.class, "CreateContainerPropertiesVisual.deleteButton.text")); // NOI18N
         deleteButton.setEnabled(false);
+        deleteButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteButtonActionPerformed(evt);
+            }
+        });
 
         volumesTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null},
-                {null, null},
-                {null, null},
                 {null, null}
             },
             new String [] {
-                "Target", "Source"
+                "Source", "Target"
             }
         ) {
             Class[] types = new Class [] {
@@ -225,8 +234,8 @@ public class RunContainerPropertiesVisual extends javax.swing.JPanel {
         volumesTable.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         jScrollPane2.setViewportView(volumesTable);
         if (volumesTable.getColumnModel().getColumnCount() > 0) {
-            volumesTable.getColumnModel().getColumn(0).setHeaderValue(org.openide.util.NbBundle.getMessage(RunContainerPropertiesVisual.class, "RunContainerPropertiesVisual.volumesTable.columnModel.title0")); // NOI18N
-            volumesTable.getColumnModel().getColumn(1).setHeaderValue(org.openide.util.NbBundle.getMessage(RunContainerPropertiesVisual.class, "RunContainerPropertiesVisual.volumesTable.columnModel.title1")); // NOI18N
+            volumesTable.getColumnModel().getColumn(0).setHeaderValue(org.openide.util.NbBundle.getMessage(CreateContainerPropertiesVisual.class, "CreateContainerPropertiesVisual.volumesTable.columnModel.title0")); // NOI18N
+            volumesTable.getColumnModel().getColumn(1).setHeaderValue(org.openide.util.NbBundle.getMessage(CreateContainerPropertiesVisual.class, "CreateContainerPropertiesVisual.volumesTable.columnModel.title1")); // NOI18N
         }
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -294,6 +303,26 @@ public class RunContainerPropertiesVisual extends javax.swing.JPanel {
         addButton.setEnabled(selected);
         deleteButton.setEnabled(selected);
     }//GEN-LAST:event_mountVolumesCheckBoxStateChanged
+
+    private void addButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addButtonActionPerformed
+        ((DefaultTableModel) volumesTable.getModel()).addRow(new Object[]{null, null});
+    }//GEN-LAST:event_addButtonActionPerformed
+
+    private void deleteButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteButtonActionPerformed
+        final int selectedRow = volumesTable.getSelectedRow();
+        if (selectedRow == -1) {
+            return;
+        }
+        ((DefaultTableModel) volumesTable.getModel()).removeRow(selectedRow);
+
+        if (volumesTable.getRowCount() == 0) {
+            return;
+        }
+        final int newSelectedRow = selectedRow <= volumesTable.getRowCount() - 1
+                ? selectedRow
+                : volumesTable.getRowCount() - 1;
+        volumesTable.getSelectionModel().setSelectionInterval(newSelectedRow, newSelectedRow);
+    }//GEN-LAST:event_deleteButtonActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
