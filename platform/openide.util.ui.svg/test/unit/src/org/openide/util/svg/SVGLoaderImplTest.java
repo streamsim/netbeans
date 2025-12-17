@@ -18,14 +18,25 @@
  */
 package org.openide.util.svg;
 
+import java.awt.BorderLayout;
+import java.awt.HeadlessException;
 import java.awt.Image;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
 import org.netbeans.junit.NbTestCase;
 import org.openide.util.ImageUtilities;
 
@@ -43,7 +54,31 @@ public class SVGLoaderImplTest extends NbTestCase {
         Image im = ImageUtilities.loadImage("org/openide/util/svg/innocent.svg", false); // NOI18N
         assertNotNull("Image must not load", im);
     }
-    
+
+    public void testLoadImageWithNbreslocImageHrefXLink() throws Exception {
+        Image im = ImageUtilities.loadImage("org/openide/util/svg/nbreslocImageHrefXLink.svg", false); // NOI18N
+        assertNotNull("Image must not load", im);
+//        preview(im);
+    }
+
+    private static void preview(Image im) throws InterruptedException, HeadlessException {
+        JFrame frame = new JFrame();
+        frame.setLayout(new BorderLayout());
+        frame.add(new JLabel(new ImageIcon(im)), BorderLayout.CENTER);
+        frame.pack();
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        CountDownLatch latch = new CountDownLatch(1);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                frame.setVisible(false);
+                latch.countDown();
+            }
+        });
+        frame.setVisible(true);
+        latch.await();
+    }
+
     public void testLoadImageWithExternalUseHrefXlink() throws Exception {
       testLoadImageWithExternalHref("org/openide/util/svg/externalHref.svg");
     }
