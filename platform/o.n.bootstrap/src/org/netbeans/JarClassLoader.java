@@ -19,6 +19,9 @@
 
 package org.netbeans;
 
+import org.openide.util.BaseUtilities;
+import org.openide.util.Exceptions;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -48,6 +51,7 @@ import java.security.ProtectionDomain;
 import java.security.cert.Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -68,8 +72,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
-import org.openide.util.BaseUtilities;
-import org.openide.util.Exceptions;
 
 /**
  * A ProxyClassLoader capable of loading classes from a set of jar files
@@ -134,6 +136,7 @@ public class JarClassLoader extends ProxyClassLoader {
     private static final Logger LOGGER = Logger.getLogger(JarClassLoader.class.getName());
 
     private final Source[] sources;
+    private final Map<String, Collection<Source>> resourcesMap = new HashMap<>();
     private final Module module;
 
     /**
@@ -175,6 +178,38 @@ public class JarClassLoader extends ProxyClassLoader {
         sources = l.toArray(Source[]::new);
         // overlaps with old packages doesn't matter,PCL uses sets.
         addCoveredPackages(getCoveredPackages(module, sources));
+        addSourcesToResourceMap(sources);
+    }
+
+    private void addSourcesToResourceMap(Source... sources) {
+        synchronized (resourcesMap) {
+            for (Source source : sources) {
+                for (String resource : source.getContainingResources()) {
+                    resourcesMap.compute(resource, (k, v) -> {
+                        if (v == null) {
+                            return Collections.singleton(source);
+                        }
+                        // If it is a singleton, create a growing copy
+                        if (v.size() == 1) {
+                            v = new ArrayList<>(v);
+                        }
+                        v.add(source);
+                        return v;
+                    });
+                }
+            }
+        }
+    }
+
+    private Collection<Source> getSourcesForResource(String resourceName) {
+        synchronized (resourcesMap) {
+            Collection<Source> src = resourcesMap.get(resourceName);
+            if (src == null) {
+                return null;
+            }
+            // If it is a singleton, return it, otherwise create a copy
+            return src.size() == 1 ? src : new ArrayList<>(src);
+        }
     }
 
     /** Allows to specify the right permissions, OneModuleClassLoader does it differently.
@@ -206,9 +241,24 @@ public class JarClassLoader extends ProxyClassLoader {
     protected Class<?> doLoadClass(String pkgName, String name) {
         String path = name.replace('.', '/').concat(".class"); // NOI18N
 
-        // look up the Sources and return a class based on their content
-        for( int i=0; i<sources.length; i++ ) {
-            final Source src = sources[i];
+        // Fast path: only jars that list this resource path (studioSL#1037).
+        // Multi-release JARs store classes under META-INF/versions/N/...; those paths
+        // are indexed separately from com/foo/Bar.class, so the map may miss — fall back below.
+        Collection<Source> mapped = getSourcesForResource(path);
+        Class<?> c = doLoadClassFromSources(pkgName, name, path, mapped);
+        if (c != null) {
+            return c;
+        }
+        if (mapped != null) {
+            return doLoadClassFromSources(pkgName, name, path, null);
+        }
+        return null;
+    }
+
+    /** @param mappedSources null means try every {@link #sources} (pre-#1037 behavior) */
+    private Class<?> doLoadClassFromSources(String pkgName, String name, String path, Collection<Source> mappedSources) {
+        Iterable<Source> iter = mappedSources != null ? mappedSources : Arrays.asList(sources);
+        for (Source src : iter) {
             byte[] data = src.getClassData(path);
             if (data == null) continue;
 
@@ -290,21 +340,44 @@ public class JarClassLoader extends ProxyClassLoader {
     // look up the jars and return a resource based on a content of jars
     @Override
     public URL findResource(String name) {
-        for( int i=0; i<sources.length; i++ ) {
-            URL item = sources[i].getResource(name);
-            if (item != null) return item;
+        Collection<Source> srcs = getSourcesForResource(name);
+        if (srcs != null) {
+            for (Source source : srcs) {
+                URL item = source.getResource(name);
+                if (item != null) {
+                    return item;
+                }
+            }
         }
-	return null;
+        for (Source source : sources) {
+            URL item = source.getResource(name);
+            if (item != null) {
+                return item;
+            }
+        }
+        return null;
     }
 
     @Override
     public Enumeration<URL> findResources(String name) {
-        ArrayList<URL> v = new ArrayList<>(3);
         // look up the jars and return a resource based on a content of jars
-
-        for( int i=0; i<sources.length; i++ ) {
-            URL item = sources[i].getResource(name);
-            if (item != null) v.add(item);
+        Collection<Source> srcs = getSourcesForResource(name);
+        List<URL> v = new ArrayList<>(srcs != null ? srcs.size() : 3);
+        if (srcs != null) {
+            for (Source src : srcs) {
+                URL item = src.getResource(name);
+                if (item != null) {
+                    v.add(item);
+                }
+            }
+        }
+        if (v.isEmpty()) {
+            for (Source source : sources) {
+                URL item = source.getResource(name);
+                if (item != null) {
+                    v.add(item);
+                }
+            }
         }
         return Collections.enumeration(v);
     }
@@ -354,6 +427,8 @@ public class JarClassLoader extends ProxyClassLoader {
             }
             return pd;
         }
+
+        protected abstract Collection<String> getContainingResources();
 
         public final URL getResource(String name) {
             try {
@@ -460,6 +535,9 @@ public class JarClassLoader extends ProxyClassLoader {
         private int used;
         private volatile int[] versions;
         private volatile Reference<Manifest> manifest;
+        // volatile is not required, only accessed from synchronized block
+        private boolean initialized = false;
+        private final Set<String> existingResources = new HashSet<>();
         /** #141110: expensive to repeatedly look for them */
         private final Set<String> nonexistentResources = Collections.synchronizedSet(new HashSet<>());
         private final Set<File> warnedFiles = Collections.synchronizedSet(new HashSet<>()); // #183696
@@ -471,6 +549,13 @@ public class JarClassLoader extends ProxyClassLoader {
             super(URI.create(resPrefix).toURL()); // NOI18N
             this.resPrefix = resPrefix; // NOI18N;
             this.file = file;
+        }
+
+        @Override
+        protected Collection<String> getContainingResources() {
+            maybeInitialize();
+            // Set has been initialized, so it can have concurrent access
+            return existingResources;
         }
 
         @Override
@@ -641,6 +726,29 @@ public class JarClassLoader extends ProxyClassLoader {
             return new int[0];
         }
 
+        private void maybeInitialize() {
+            synchronized (existingResources) {
+                if (initialized) {
+                    return;
+                }
+                try {
+                    JarFile src = getJarFile("pkg");
+                    Enumeration<JarEntry> en = src.entries();
+                    while (en.hasMoreElements()) {
+                        JarEntry je = en.nextElement();
+                        if (!je.isDirectory()) {
+                            existingResources.add(je.getName());
+                        }
+                    }
+                } catch (IOException x) {
+                    LOGGER.log(Level.INFO, "Cannot open " + file, x);
+                } finally {
+                    releaseJarFile();
+                    initialized = true;
+                }
+            }
+        }
+
         @Override
         public byte[] resource(String path) throws IOException {
             if (nonexistentResources.contains(path)) {
@@ -683,58 +791,61 @@ public class JarClassLoader extends ProxyClassLoader {
 
         @Override
         protected void listCoveredPackages(Set<String> known, StringBuilder save) {
-            try {
-                JarFile src = getJarFile("pkg");
+            synchronized (existingResources) {
+                try {
+                    JarFile src = getJarFile("pkg");
 
-                Enumeration<JarEntry> en = src.entries();
-                while (en.hasMoreElements()) {
-                    JarEntry je = en.nextElement();
-                    if (! je.isDirectory()) {
-                        String itm = je.getName();
-                        int slash = itm.lastIndexOf('/');
-                        if (slash == -1) {
-                            // resource in default package
-                            String res = "default/" + je.getName();
-                            if (known.add(res)) {
-                                save.append(res).append(',');
-                            }
-                            continue;
-                        }
-                        if (itm.startsWith("META-INF/versions/")) {
-                            int endOfVersion = itm.indexOf("/", 18) + 1;
-                            if (endOfVersion > 0 && endOfVersion < itm.length() && endOfVersion < slash) {
-                                String pkg = itm.substring(endOfVersion, slash).replace('/', '.');
-                                if (known.add(pkg)) {
-                                    save.append(pkg).append(',');
+                    Enumeration<JarEntry> en = src.entries();
+                    while (en.hasMoreElements()) {
+                        JarEntry je = en.nextElement();
+                        if (! je.isDirectory()) {
+                            existingResources.add(je.getName());
+                            String itm = je.getName();
+                            int slash = itm.lastIndexOf('/');
+                            if (slash == -1) {
+                                // resource in default package
+                                String res = "default/" + je.getName();
+                                if (known.add(res)) {
+                                    save.append(res).append(',');
                                 }
+                                continue;
                             }
-                            continue;
-                        } else if (itm.startsWith("META-INF/")) {
-                            String res = itm.substring(8); // "/services/pkg.Service"
-                            if (known.add(res)) save.append(res).append(',');
-                            continue;
-                        }
-                        String pkg = slash > 0 ? itm.substring(0, slash).replace('/', '.') : "";
-                        if (known.add(pkg)) {
-                            save.append(pkg).append(',');
+                            if (itm.startsWith("META-INF/versions/")) {
+                                int endOfVersion = itm.indexOf("/", 18) + 1;
+                                if (endOfVersion > 0 && endOfVersion < itm.length() && endOfVersion < slash) {
+                                    String pkg = itm.substring(endOfVersion, slash).replace('/', '.');
+                                    if (known.add(pkg)) {
+                                        save.append(pkg).append(',');
+                                    }
+                                }
+                                continue;
+                            } else if (itm.startsWith("META-INF/")) {
+                                String res = itm.substring(8); // "/services/pkg.Service"
+                                if (known.add(res)) save.append(res).append(',');
+                                continue;
+                            }
+                            String pkg = slash > 0 ? itm.substring(0, slash).replace('/', '.') : "";
+                            if (known.add(pkg)) {
+                                save.append(pkg).append(',');
+                            }
                         }
                     }
+                } catch (ZipException | FileNotFoundException x) { // Unix
+                    if (warnedFiles.add(file)) {
+                        LOGGER.log(Level.INFO, "Cannot open " + file, x);
+                        dumpFiles(file, -1);
+                    }
+                } catch (IOException ioe) { // Windows
+                    if (warnedFiles.add(file)) {
+                        LOGGER.log(Level.WARNING, "problems with " + file, ioe);
+                        dumpFiles(file, -1);
+                    }
+                } finally {
+                    releaseJarFile();
+                    initialized = true;
                 }
-            } catch (ZipException | FileNotFoundException x) { // Unix
-                if (warnedFiles.add(file)) {
-                    LOGGER.log(Level.INFO, "Cannot open " + file, x);
-                    dumpFiles(file, -1);
-                }
-            } catch (IOException ioe) { // Windows
-                if (warnedFiles.add(file)) {
-                    LOGGER.log(Level.WARNING, "problems with " + file, ioe);
-                    dumpFiles(file, -1);
-                }
-            } finally {
-                releaseJarFile();
             }
         }
-
 
         @Override
         protected void destroy() throws IOException {
@@ -907,6 +1018,8 @@ public class JarClassLoader extends ProxyClassLoader {
     private static class DirSource extends Source {
         File dir;
         Manifest manifest;
+        private boolean initialized = false;
+        private final Set<String> existingResources = new HashSet<>();
 
         DirSource(File file) throws MalformedURLException {
             super(BaseUtilities.toURI(file).toURL());
@@ -938,6 +1051,31 @@ public class JarClassLoader extends ProxyClassLoader {
         }
 
         @Override
+        protected Collection<String> getContainingResources() {
+            maybeInitialize();
+            return Collections.unmodifiableSet(existingResources);
+        }
+
+        private void maybeInitialize() {
+            synchronized (existingResources) {
+                if (initialized) {
+                    return;
+                }
+                findExistingResources(dir, "", existingResources);
+                initialized = true;
+            }
+        }
+
+        private static void findExistingResources(File dir, String prefix, Set<String> resources) {
+            for (File f : dir.listFiles()) {
+                if (f.isDirectory()) {
+                    findExistingResources(f, prefix + f.getName() + '/', resources);
+                } else {
+                    resources.add(prefix + f.getName());
+                }
+            }
+        }
+
         protected URL doGetResource(String name) throws MalformedURLException {
             File resFile = new File(dir, name);
             return resFile.exists() ? BaseUtilities.toURI(resFile).toURL() : null;
@@ -955,15 +1093,19 @@ public class JarClassLoader extends ProxyClassLoader {
 
         @Override
         protected void listCoveredPackages(Set<String> known, StringBuilder save) {
-            appendAllChildren(known, save, dir, "");
+            synchronized (existingResources) {
+                appendAllChildren(known, save, dir, "", existingResources);
+                initialized = true;
+            }
         }
 
-        private static void appendAllChildren(Set<String> known, StringBuilder save, File dir, String prefix) {
+        private static void appendAllChildren(Set<String> known, StringBuilder save, File dir, String prefix, Set<String> resources) {
             boolean populated = false;
             for (File f : dir.listFiles()) {
                 if (f.isDirectory()) {
-                    appendAllChildren(known, save, f, prefix + f.getName() + '.');
+                    appendAllChildren(known, save, f, prefix + f.getName() + '.', resources);
                 } else {
+                    resources.add(prefix.replace('.', '/') + f.getName());
                     if (prefix.length() == 0) {
                         // resource in default package
                         String res = "default/" + f.getName();
