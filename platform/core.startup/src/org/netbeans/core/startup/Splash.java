@@ -270,9 +270,15 @@ public final class Splash implements Stamps.Updater {
         if (ret == null) {
             return null;
         }
-        return new ScaledBitmapIcon(ret,
-                Integer.parseInt(NbBundle.getMessage(Splash.class, "SPLASH_WIDTH")),
-                Integer.parseInt(NbBundle.getMessage(Splash.class, "SPLASH_HEIGHT")));
+        final int splashWidth = Integer.parseInt(NbBundle.getMessage(Splash.class, "SPLASH_WIDTH"));
+        final int splashHeight = Integer.parseInt(NbBundle.getMessage(Splash.class, "SPLASH_HEIGHT"));
+        /* SVG (and other HiDPI-aware) icons that already match the splash logical size should be
+        painted directly. Wrapping them in ScaledBitmapIcon would nest CachedHiDPIIcon transforms
+        and add an unnecessary extra rasterization. */
+        if (ret.getIconWidth() == splashWidth && ret.getIconHeight() == splashHeight) {
+            return ret;
+        }
+        return new ScaledBitmapIcon(ret, splashWidth, splashHeight);
     }
 
     @Override

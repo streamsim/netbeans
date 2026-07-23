@@ -36,6 +36,10 @@ import org.openide.util.Parameters;
  * Windows. It's recommended to use a source image with dimensions that are exactly twice those of
  * the icon's logical dimensions. A double-resolution source image will automatically be scaled
  * down to 1x, 1.5x, or other HiDPI scaling factors as needed.
+ *
+ * <p>When the source is itself a {@link CachedHiDPIIcon} (e.g. an SVG icon), painting goes through
+ * a uniform screen-scale transform first so nested HiDPI rasterization stays at device resolution;
+ * the result is then bicubic-scaled to the splash size if needed.
  */
 final class ScaledBitmapIcon extends CachedHiDPIIcon {
     private final Icon sourceIcon;
@@ -50,28 +54,50 @@ final class ScaledBitmapIcon extends CachedHiDPIIcon {
         sourceHeight = sourceIcon.getIconHeight();
     }
 
+    private static void configureQualityHints(Graphics2D g) {
+        /* Despite these hints, downscaling by more than 2x tends to give low-quality
+        results compared to image resizing in, say, Photoshop or IrfanView. This is a known
+        quality/performance trade-off in Java2D; see
+        https://stackoverflow.com/questions/24745147/java-resize-image-without-losing-quality .
+        Our Javadoc recommendation to use a scaling of exactly 2x should avoid these
+        problems. */
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        g.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+    }
+
     @Override
     protected Image createAndPaintImage(
         Component c, ColorModel colorModel, int deviceWidth, int deviceHeight, double scale)
     {
         final BufferedImage img = createBufferedImage(colorModel, deviceWidth, deviceHeight);
         if (sourceWidth > 0 && sourceHeight > 0) {
+            final int srcDeviceWidth = (int) Math.ceil(sourceWidth * scale);
+            final int srcDeviceHeight = (int) Math.ceil(sourceHeight * scale);
             final Graphics2D g = img.createGraphics();
             try {
-                /* Despite these hints, downscaling by more than 2x tends to give low-quality
-                results compared to image resizing in, say, Photoshop or IrfanView. This is a known
-                quality/performance trade-off in Java2D; see
-                https://stackoverflow.com/questions/24745147/java-resize-image-without-losing-quality .
-                Our Javadoc recommendation to use a scaling of exactly 2x should avoid these
-                problems. */
-                g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-                g.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
-                g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-                g.setTransform(AffineTransform.getScaleInstance(
-                        scale * getIconWidth() / (double) sourceWidth,
-                        scale * getIconHeight() / (double) sourceHeight));
-                sourceIcon.paintIcon(null, g, 0, 0);
+                configureQualityHints(g);
+                /* Paint the source with a uniform screen scale only. Nested CachedHiDPIIcon
+                implementations (e.g. SVGIcon) read that scale and rasterize at device pixels;
+                a non-uniform splashW/srcW vs splashH/srcH transform would previously cause them
+                to fall back to scale 1.0. */
+                if (srcDeviceWidth == deviceWidth && srcDeviceHeight == deviceHeight) {
+                    g.setTransform(AffineTransform.getScaleInstance(scale, scale));
+                    sourceIcon.paintIcon(null, g, 0, 0);
+                } else {
+                    final BufferedImage srcImg =
+                            createBufferedImage(colorModel, srcDeviceWidth, srcDeviceHeight);
+                    final Graphics2D gSrc = srcImg.createGraphics();
+                    try {
+                        configureQualityHints(gSrc);
+                        gSrc.setTransform(AffineTransform.getScaleInstance(scale, scale));
+                        sourceIcon.paintIcon(null, gSrc, 0, 0);
+                    } finally {
+                        gSrc.dispose();
+                    }
+                    g.drawImage(srcImg, 0, 0, deviceWidth, deviceHeight, null);
+                }
             } finally {
                 g.dispose();
             }
