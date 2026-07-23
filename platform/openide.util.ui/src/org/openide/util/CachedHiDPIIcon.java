@@ -208,14 +208,38 @@ public abstract class CachedHiDPIIcon implements Icon {
             this.scale = scale;
         }
 
+        /**
+         * Relative tolerance for treating scaleX/scaleY as uniform (e.g. float/ceil mismatches).
+         */
+        private static final double SCALE_EPSILON = 1e-3;
+
+        /**
+         * Bits allowed when detecting a HiDPI scale from a Graphics2D transform. Rotation and shear
+         * are excluded; for those we fall back to scale 1.0.
+         */
+        private static final int SCALE_AND_TRANSLATE_BITS =
+                AffineTransform.TYPE_UNIFORM_SCALE |
+                AffineTransform.TYPE_GENERAL_SCALE |
+                AffineTransform.TYPE_TRANSLATION |
+                AffineTransform.TYPE_FLIP;
+
         public static CachedImageKey create(Graphics2D g) {
             final AffineTransform tx = g.getTransform();
             final int txType = tx.getType();
             final double scale;
-            if (txType == AffineTransform.TYPE_UNIFORM_SCALE ||
-                txType == (AffineTransform.TYPE_UNIFORM_SCALE | AffineTransform.TYPE_TRANSLATION))
-            {
-                scale = tx.getScaleX();
+            if ((txType & ~SCALE_AND_TRANSLATE_BITS) == 0) {
+                final double sx = Math.abs(tx.getScaleX());
+                final double sy = Math.abs(tx.getScaleY());
+                if (sx <= 0.0 && sy <= 0.0) {
+                    scale = 1.0;
+                } else if (Math.abs(sx - sy) <= SCALE_EPSILON * Math.max(1.0, Math.max(sx, sy))) {
+                    /* Near-uniform (including exact uniform): use the average to reduce float noise. */
+                    scale = (sx + sy) / 2.0;
+                } else {
+                    /* Non-uniform scale/translate (e.g. remapping icon size): still rasterize at
+                    device resolution instead of silently falling back to 1.0. */
+                    scale = Math.max(sx, sy);
+                }
             } else {
                 scale = 1.0;
             }
