@@ -35,6 +35,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Icon;
 import com.github.weisj.jsvg.SVGDocument;
+import com.github.weisj.jsvg.SVGRenderingHints;
 import com.github.weisj.jsvg.geometry.size.FloatSize;
 import com.github.weisj.jsvg.parser.LoaderContext;
 import com.github.weisj.jsvg.parser.ParsedDocument;
@@ -202,6 +203,13 @@ final class SVGIcon extends CachedHiDPIIcon {
         regular strokes, as they do during editing in Adobe Illustrator. This hint is also
         specifically recommended by JSVG's README ( https://github.com/weisJ/jsvg ). */
         hints.put(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+        /* Improve scaling of linked/embedded raster images inside SVGs on HiDPI displays.
+        KEY_IMAGE_ANTIALIASING defaults to following KEY_ANTIALIASING; set it explicitly and pair
+        with bicubic interpolation so bitmaps are not upscaled with nearest-neighbor. */
+        hints.put(SVGRenderingHints.KEY_IMAGE_ANTIALIASING, SVGRenderingHints.VALUE_IMAGE_ANTIALIASING_ON);
+        hints.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        hints.put(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+        hints.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         return new RenderingHints(hints);
     }
 
