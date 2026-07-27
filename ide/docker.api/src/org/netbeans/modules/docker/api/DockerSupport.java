@@ -30,6 +30,7 @@ import java.util.prefs.NodeChangeListener;
 import java.util.prefs.Preferences;
 import javax.swing.event.ChangeListener;
 import org.netbeans.api.annotations.common.NonNull;
+import org.openide.util.BaseUtilities;
 import org.openide.util.ChangeSupport;
 import org.openide.util.NbPreferences;
 import org.openide.util.Parameters;
@@ -127,7 +128,8 @@ public final class DockerSupport {
     }
 
     public boolean isSocketSupported() {
-        return true;
+        // UNIX socket is supported on Windows, but docker does not use it, it still uses a named pipe
+        return !BaseUtilities.isWindows();
     }
 
     private boolean isInitialized() {
