@@ -66,31 +66,16 @@ public class NamedPipeURLConnection extends URLConnection {
 
             @Override
             public int read() throws IOException {
-                while (true) {
-                    if (in.available() > 0) {
-                        break;
-                    }
-                }
                 return in.read();
             }
 
             @Override
             public int read(byte[] b) throws IOException {
-                while (true) {
-                    if (in.available() > 0) {
-                        break;
-                    }
-                }
                 return in.read(b);
             }
 
             @Override
             public int read(byte[] b, int off, int len) throws IOException {
-                while (true) {
-                    if (in.available() > 0) {
-                        break;
-                    }
-                }
                 return in.read(b, off, len);
             }
 
