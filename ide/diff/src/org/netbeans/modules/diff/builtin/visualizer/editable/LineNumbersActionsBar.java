@@ -48,6 +48,8 @@ import javax.swing.Scrollable;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.text.AttributeSet;
+import javax.swing.text.Document;
+import javax.swing.text.Position;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.View;
 import org.netbeans.api.editor.document.LineDocumentUtils;
@@ -246,9 +248,17 @@ class LineNumbersActionsBar extends JPanel implements Scrollable, MouseMotionLis
 
     private void updateStateOnDocumentChange() {
         assert SwingUtilities.isEventDispatchThread();
-        StyledDocument doc = (StyledDocument) master.getEditorPane().getDocument();
-        int lastOffset = doc.getEndPosition().getOffset();
-        linesCount = org.openide.text.NbDocument.findLineNumber(doc, lastOffset);
+        Document document = master.getEditorPane().getDocument();
+        if (document instanceof BaseDocument) {
+            linesCount = LineDocumentUtils.getLineCount((BaseDocument) document);
+        } else if (document instanceof StyledDocument) {
+            StyledDocument doc = (StyledDocument) document;
+            Position end = doc.getEndPosition();
+            int lastOffset = end != null ? end.getOffset() : doc.getLength();
+            linesCount = org.openide.text.NbDocument.findLineNumber(doc, lastOffset);
+        } else {
+            linesCount = 0;
+        }
 
         Graphics g = getGraphics();
         if (g != null) checkLinesWidth(g);
