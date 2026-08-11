@@ -144,9 +144,15 @@ public class LinesComponent extends JComponent implements javax.accessibility.Ac
     private void createLines() {
         linesList = new LinkedList<>();
         int lineCnt;
-        StyledDocument doc = (StyledDocument)editorPane.getDocument();
-        int lastOffset = doc.getEndPosition().getOffset();
-        lineCnt = org.openide.text.NbDocument.findLineNumber(doc, lastOffset);
+        Document document = editorPane.getDocument();
+        if (document instanceof StyledDocument) {
+            StyledDocument doc = (StyledDocument) document;
+            Position end = doc.getEndPosition();
+            int lastOffset = end != null ? end.getOffset() : doc.getLength();
+            lineCnt = org.openide.text.NbDocument.findLineNumber(doc, lastOffset);
+        } else {
+            lineCnt = 0;
+        }
         for (int i = 0; i < lineCnt; i++) {
             linesList.add(Integer.toString(i + 1));
         }
