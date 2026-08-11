@@ -1087,8 +1087,12 @@ public class EditableDiffView extends DiffControllerImpl implements DiffView, Do
     private void initGlobalSizes() {
         StyledDocument doc1 = (StyledDocument) jEditorPane1.getEditorPane().getDocument();
         StyledDocument doc2 = (StyledDocument) jEditorPane2.getEditorPane().getDocument();
-        int numLines1 = org.openide.text.NbDocument.findLineNumber(doc1, doc1.getEndPosition().getOffset());
-        int numLines2 = org.openide.text.NbDocument.findLineNumber(doc2, doc2.getEndPosition().getOffset());
+        Position end1 = doc1.getEndPosition();
+        Position end2 = doc2.getEndPosition();
+        int lastOffset1 = end1 != null ? end1.getOffset() : doc1.getLength();
+        int lastOffset2 = end2 != null ? end2.getOffset() : doc2.getLength();
+        int numLines1 = org.openide.text.NbDocument.findLineNumber(doc1, lastOffset1);
+        int numLines2 = org.openide.text.NbDocument.findLineNumber(doc2, lastOffset2);
 
         int numLines = Math.max(numLines1, numLines2);
         if (numLines < 1) numLines = 1;
