@@ -304,6 +304,19 @@ public class OptionsDisplayerImpl {
     /** Set visibility of Advanced Options button (AKA classic) according to
      * existence of advanced options. */
     private void updateButtons() {
+        // studioSL#TBD FS events are delivered on non-EDT threads (e.g. an
+        // editor settings storage flush holding its lock). Calling
+        // setVisible() here blocks on the AWT tree lock and deadlocks with
+        // the EDT reading preferences during editor layout. Hop to the EDT.
+        if (!SwingUtilities.isEventDispatchThread()) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    updateButtons();
+                }
+            });
+            return;
+        }
         if(bClassic != null) {
             bClassic.setVisible(advancedOptionsNotEmpty());
         }
