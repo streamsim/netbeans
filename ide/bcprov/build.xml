@@ -17,5 +17,4 @@
 -->
 <project name="ide/bcprov" default="build" basedir=".">
     <import file="../../nbbuild/templates/projectized.xml"/>
-    <target name="jar"/>
 </project>
