@@ -1,1 +1,6 @@
+Manifest-Version: 1.0
+AutoUpdate-Show-In-Client: false
 OpenIDE-Module: bcprov
+OpenIDE-Module-Localizing-Bundle: org/netbeans/libs/bcprov/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.87
+

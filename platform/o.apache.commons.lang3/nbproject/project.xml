@@ -25,9 +25,28 @@
         <data xmlns="http://www.netbeans.org/ns/nb-module-project/2">
             <code-name-base>org.apache.commons.lang3</code-name-base>
             <module-dependencies/>
-            <public-packages/>
+            <public-packages>
+                <package>org.apache.commons.lang3</package>
+                <package>org.apache.commons.lang3.arch</package>
+                <package>org.apache.commons.lang3.builder</package>
+                <package>org.apache.commons.lang3.compare</package>
+                <package>org.apache.commons.lang3.concurrent</package>
+                <package>org.apache.commons.lang3.concurrent.locks</package>
+                <package>org.apache.commons.lang3.event</package>
+                <package>org.apache.commons.lang3.exception</package>
+                <package>org.apache.commons.lang3.function</package>
+                <package>org.apache.commons.lang3.math</package>
+                <package>org.apache.commons.lang3.mutable</package>
+                <package>org.apache.commons.lang3.reflect</package>
+                <package>org.apache.commons.lang3.stream</package>
+                <package>org.apache.commons.lang3.text</package>
+                <package>org.apache.commons.lang3.text.translate</package>
+                <package>org.apache.commons.lang3.time</package>
+                <package>org.apache.commons.lang3.tuple</package>
+                <package>org.apache.commons.lang3.util</package>
+            </public-packages>
             <class-path-extension>
-                <runtime-relative-path>commons-lang3.jar</runtime-relative-path>
+                <runtime-relative-path>ext/commons-lang3-3.20.0.jar</runtime-relative-path>
                 <binary-origin>external/commons-lang3-3.20.0.jar</binary-origin>
             </class-path-extension>
         </data>
