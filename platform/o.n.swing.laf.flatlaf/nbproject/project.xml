@@ -124,7 +124,10 @@
                     </run-dependency>
                 </dependency>
             </module-dependencies>
-            <public-packages/>
+            <friend-packages>
+                <friend>org.netbeans.modules.javahelp</friend>
+                <package>org.netbeans.swing.laf.flatlaf</package>
+            </friend-packages>
         </data>
     </configuration>
 </project>
