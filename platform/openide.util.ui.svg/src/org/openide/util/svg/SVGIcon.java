@@ -35,12 +35,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Icon;
 import com.github.weisj.jsvg.SVGDocument;
+import com.github.weisj.jsvg.SVGRenderingHints;
 import com.github.weisj.jsvg.geometry.size.FloatSize;
 import com.github.weisj.jsvg.parser.LoaderContext;
 import com.github.weisj.jsvg.parser.ParsedDocument;
 import com.github.weisj.jsvg.parser.ResourceLoader;
+import com.github.weisj.jsvg.parser.ResourcePolicy;
 import com.github.weisj.jsvg.parser.SVGLoader;
+import com.github.weisj.jsvg.parser.ValueUIFuture;
 import com.github.weisj.jsvg.renderer.awt.NullPlatformSupport;
+import com.github.weisj.jsvg.util.ResourceUtil;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -136,10 +140,11 @@ final class SVGIcon extends CachedHiDPIIcon {
             testLoadImageWithExternalImageHref. */
             List<IOException> externalResourceExceptions = new ArrayList<>();
             ResourceLoader resourceLoader = (ParsedDocument nnpd, URI nnuri) -> {
-              IOException e = new IOException("External resource loading from SVG file not permitted ("+
-                  nnuri + " from " + url + ")");
-              externalResourceExceptions.add(e);
-              throw e;
+//              IOException e = new IOException("External resource loading from SVG file not permitted ("+
+//                  nnuri + " from " + url + ")");
+//              externalResourceExceptions.add(e);
+//              throw e;
+                return new ValueUIFuture<>(ResourceUtil.loadImage(nnpd, nnuri));
             };
             /* Handle e.g. <use xlink:href="http://foobar/not/exists#text"> elements. Tested in
             testLoadImageWithExternalUseXlinkHref. */
@@ -147,6 +152,8 @@ final class SVGIcon extends CachedHiDPIIcon {
 
             svgDocument = SVG_LOADER.get().load(is, null, LoaderContext.builder()
                 .resourceLoader(resourceLoader)
+                // ALLOW_ALL = FLAG_ALLOW_RELATIVE | FLAG_ALLOW_ABSOLUTE | FLAG_ALLOW_NON_LOCAL | FLAG_ALLOW_EMBEDDED_DATA
+                .externalResourcePolicy(ResourcePolicy.ALLOW_ALL)
                 .elementLoader(elementLoader)
                 .build());
             if (!elementLoader.getAttemptedExternalURLsLoaded().isEmpty()) {
@@ -196,6 +203,13 @@ final class SVGIcon extends CachedHiDPIIcon {
         regular strokes, as they do during editing in Adobe Illustrator. This hint is also
         specifically recommended by JSVG's README ( https://github.com/weisJ/jsvg ). */
         hints.put(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+        /* Improve scaling of linked/embedded raster images inside SVGs on HiDPI displays.
+        KEY_IMAGE_ANTIALIASING defaults to following KEY_ANTIALIASING; set it explicitly and pair
+        with bicubic interpolation so bitmaps are not upscaled with nearest-neighbor. */
+        hints.put(SVGRenderingHints.KEY_IMAGE_ANTIALIASING, SVGRenderingHints.VALUE_IMAGE_ANTIALIASING_ON);
+        hints.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        hints.put(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+        hints.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         return new RenderingHints(hints);
     }
 
