@@ -714,8 +714,12 @@ public class MergePanel extends javax.swing.JPanel implements java.awt.event.Act
     private void initGlobalSizes() {
         StyledDocument doc1 = (StyledDocument) jEditorPane1.getDocument();
         StyledDocument doc2 = (StyledDocument) jEditorPane2.getDocument();
-        int numLines1 = org.openide.text.NbDocument.findLineNumber(doc1, doc1.getEndPosition().getOffset());
-        int numLines2 = org.openide.text.NbDocument.findLineNumber(doc2, doc2.getEndPosition().getOffset());
+        Position end1 = doc1.getEndPosition();
+        Position end2 = doc2.getEndPosition();
+        int lastOffset1 = end1 != null ? end1.getOffset() : doc1.getLength();
+        int lastOffset2 = end2 != null ? end2.getOffset() : doc2.getLength();
+        int numLines1 = org.openide.text.NbDocument.findLineNumber(doc1, lastOffset1);
+        int numLines2 = org.openide.text.NbDocument.findLineNumber(doc2, lastOffset2);
         int numLines = Math.max(numLines1, numLines2);
         if (numLines < 1) numLines = 1;
         this.totalLines = numLines;
@@ -1078,9 +1082,11 @@ public class MergePanel extends javax.swing.JPanel implements java.awt.event.Act
         linesComp3 = new LinesComponent(jEditorPane3);
         resultScrollPane.setRowHeaderView(linesComp3);
         resultLineNumbers = new int[1];
+        StyledDocument styledDoc = (StyledDocument) doc;
+        Position end = styledDoc.getEndPosition();
+        int lastOffset = end != null ? end.getOffset() : styledDoc.getLength();
         assureResultLineNumbersLength(
-            org.openide.text.NbDocument.findLineNumber((StyledDocument) doc,
-                                                       doc.getEndPosition().getOffset()) + 1);
+            org.openide.text.NbDocument.findLineNumber(styledDoc, lastOffset) + 1);
         for (int i = 0; i < resultLineNumbers.length; i++) resultLineNumbers[i] = i;
     }
     
@@ -1620,7 +1626,8 @@ public class MergePanel extends javax.swing.JPanel implements java.awt.event.Act
     }
     
     private void addEmptyLines(StyledDocument doc, int line, int numLines) {
-        int lastOffset = doc.getEndPosition().getOffset();
+        Position end = doc.getEndPosition();
+        int lastOffset = end != null ? end.getOffset() : doc.getLength();
         int totLines = org.openide.text.NbDocument.findLineNumber(doc, lastOffset);
         //int totLines = doc.getDefaultRootElement().getElementIndex(lastOffset);
         int offset = lastOffset;
