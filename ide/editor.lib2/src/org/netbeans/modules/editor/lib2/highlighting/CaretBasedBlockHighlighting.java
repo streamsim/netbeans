@@ -153,7 +153,8 @@ public abstract class CaretBasedBlockHighlighting implements HighlightsContainer
     
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        if (evt.getPropertyName() == null || "caret".equals(evt.getPropertyName())) { //NOI18N
+        String propName = evt.getPropertyName();
+        if (propName == null || "caret".equals(propName)) { //NOI18N
             if (caret != null) {
                 caret.removeChangeListener(caretListener);
                 caretListener = null;
@@ -166,6 +167,8 @@ public abstract class CaretBasedBlockHighlighting implements HighlightsContainer
                 caret.addChangeListener(caretListener);
             }
             
+            updateLineInfo(true);
+        } else if ("document".equals(propName)) { //NOI18N
             updateLineInfo(true);
         }
     }
@@ -247,6 +250,10 @@ public abstract class CaretBasedBlockHighlighting implements HighlightsContainer
         }
     }
     
+    private static boolean isValidOffset(Document document, int offset) {
+        return offset >= 0 && offset <= document.getLength();
+    }
+
     private static String positionToString(Position p) {
         return p == null ? "null" : p.toString(); //NOI18N
     }
@@ -274,6 +281,9 @@ public abstract class CaretBasedBlockHighlighting implements HighlightsContainer
                     List<CaretInfo> carets = editorCaret.getCarets();
                     for (CaretInfo c : carets) {
                         int caretOffset = c.getDot();
+                        if (!isValidOffset(document, caretOffset)) {
+                            continue;
+                        }
                         try {
                             int startOffset = DocUtils.getRowStart(document, caretOffset, 0);
                             int endOffset = DocUtils.getRowEnd(document, caretOffset);
@@ -283,11 +293,14 @@ public abstract class CaretBasedBlockHighlighting implements HighlightsContainer
                             Position endPos = document.createPosition(endOffset);
                             selections.addHighlight(startPos, endPos, getAttribs());
                         } catch(BadLocationException e) {
-                            LOG.log(Level.WARNING, e.getMessage(), e);
+                            LOG.log(Level.FINE, e.getMessage(), e);
                         }
                     }
                 } else {
                     int caretOffset = caret.getDot();
+                    if (!isValidOffset(document, caretOffset)) {
+                        return selections;
+                    }
                     try {
                         int startOffset = DocUtils.getRowStart(document, caretOffset, 0);
                         int endOffset = DocUtils.getRowEnd(document, caretOffset);
@@ -298,7 +311,7 @@ public abstract class CaretBasedBlockHighlighting implements HighlightsContainer
                         Position endPos = document.createPosition(endOffset);
                         selections.addHighlight(startPos, endPos, getAttribs());
                     } catch (BadLocationException e) {
-                        LOG.log(Level.WARNING, e.getMessage(), e);
+                        LOG.log(Level.FINE, e.getMessage(), e);
                     }
                 }
             }
@@ -333,13 +346,15 @@ public abstract class CaretBasedBlockHighlighting implements HighlightsContainer
                         int caretOffset = caretInfo.getDot();
                         int markOffset = caretInfo.getMark();
 
-                        if (caretOffset != markOffset) {
+                        if (caretOffset != markOffset
+                                && isValidOffset(document, caretOffset)
+                                && isValidOffset(document, markOffset)) {
                             try {
                                 Position start = document.createPosition(Math.min(caretOffset, markOffset));
                                 Position end = document.createPosition(Math.max(caretOffset, markOffset));
                                 selections.addHighlight(start, end, getAttribs());
                             } catch (BadLocationException e) {
-                                LOG.log(Level.WARNING, e.getMessage(), e);
+                                LOG.log(Level.FINE, e.getMessage(), e);
                             }
                         }
                     }
@@ -347,13 +362,15 @@ public abstract class CaretBasedBlockHighlighting implements HighlightsContainer
                     int caretOffset = caret.getDot();
                     int markOffset = caret.getMark();
 
-                    if (caretOffset != markOffset) {
+                    if (caretOffset != markOffset
+                            && isValidOffset(document, caretOffset)
+                            && isValidOffset(document, markOffset)) {
                         try {
                             Position start = document.createPosition(Math.min(caretOffset, markOffset));
                             Position end = document.createPosition(Math.max(caretOffset, markOffset));
                             selections.addHighlight(start, end, getAttribs());
                         } catch (BadLocationException e) {
-                            LOG.log(Level.WARNING, e.getMessage(), e);
+                            LOG.log(Level.FINE, e.getMessage(), e);
                         }
                     }
                 }

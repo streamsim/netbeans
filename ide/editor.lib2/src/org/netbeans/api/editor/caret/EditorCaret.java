@@ -1887,16 +1887,27 @@ public final class EditorCaret implements Caret {
                 newAtomicDoc.addAtomicLockListener(listenerImpl);
             }
 
-            // #269262 when IME is used, deinstall and install method is invoked
-            // so in such case, the existing position shoud be used
-            // because newDoc.StartPosition() may be an incorrect position
-            CaretInfo lastCaret = getLastCaret();
-            Position dotPos = lastCaret.getDotPosition();
-            if (dotPos == null) {
-                dotPos = newDoc.getStartPosition();
+            // Set caret to zero position upon true document swap (DefaultCaret / BaseCaret do this too).
+            // #269262 when IME is used, deinstall and install method is invoked on the same
+            // document, so in such case the existing offset should be preserved
+            // because newDoc.getStartPosition() may be an incorrect position.
+            Position dotPos = newDoc.getStartPosition();
+            if (oldDoc == null || oldDoc == newDoc) {
+                CaretInfo lastCaret = getLastCaret();
+                Position lastDotPos = lastCaret.getDotPosition();
+                if (lastDotPos != null) {
+                    int offset = lastDotPos.getOffset();
+                    if (offset >= 0 && offset <= newDoc.getLength()) {
+                        try {
+                            // Ensure the Position belongs to newDoc (same identity on IME reinstall)
+                            dotPos = newDoc.createPosition(offset);
+                        } catch (BadLocationException ex) {
+                            // keep start position
+                        }
+                    }
+                }
             }
 
-            // Set caret to zero position upon document change (DefaultCaret impl does this too)
             runTransaction(CaretTransaction.RemoveType.REMOVE_ALL_CARETS, 0,
                     new CaretItem[] { new CaretItem(this, dotPos, Position.Bias.Forward,
                             null, Position.Bias.Forward ) }, null);
