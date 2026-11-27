@@ -1271,6 +1271,8 @@ public class DockerAction {
             } else if ("file".equals(realUrl.getProtocol())) {
                 SocketChannel channel = SocketChannel.open(UnixDomainSocketAddress.of(Path.of(realUrl.getFile())));
                 return Endpoint.forSocketChannel(channel);
+            } else if ("npipe".equals(realUrl.getProtocol())) {
+                return Endpoint.forNamedPipe(realUrl);
             } else {
                 throw new IOException("Unknown protocol: " + realUrl.getProtocol());
             }
