@@ -260,19 +260,25 @@ public final class Splash implements Stamps.Updater {
     }
 
     private static Icon loadContentIcon(boolean about) {
-        Image ret = null;
+        Icon ret = null;
         if (about) {
-            ret = ImageUtilities.loadImage("org/netbeans/core/startup/about.png", true);
+            ret = ImageUtilities.loadImageIcon("org/netbeans/core/startup/about.png", true);
         }
         if (ret == null) {
-            ret = ImageUtilities.loadImage("org/netbeans/core/startup/splash.gif", true);
+            ret = ImageUtilities.loadImageIcon("org/netbeans/core/startup/splash.gif", true);
         }
         if (ret == null) {
             return null;
         }
-        return new ScaledBitmapIcon(ret,
-                Integer.parseInt(NbBundle.getMessage(Splash.class, "SPLASH_WIDTH")),
-                Integer.parseInt(NbBundle.getMessage(Splash.class, "SPLASH_HEIGHT")));
+        final int splashWidth = Integer.parseInt(NbBundle.getMessage(Splash.class, "SPLASH_WIDTH"));
+        final int splashHeight = Integer.parseInt(NbBundle.getMessage(Splash.class, "SPLASH_HEIGHT"));
+        /* SVG (and other HiDPI-aware) icons that already match the splash logical size should be
+        painted directly. Wrapping them in ScaledBitmapIcon would nest CachedHiDPIIcon transforms
+        and add an unnecessary extra rasterization. */
+        if (ret.getIconWidth() == splashWidth && ret.getIconHeight() == splashHeight) {
+            return ret;
+        }
+        return new ScaledBitmapIcon(ret, splashWidth, splashHeight);
     }
 
     @Override
